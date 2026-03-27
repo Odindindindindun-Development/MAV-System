@@ -1,0 +1,143 @@
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section {
+	display: block;
+}
+body {
+	line-height: 1;
+}
+ol, ul {
+	list-style: none;
+}
+blockquote, q {
+	quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: '';
+	content: none;
+}
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
+/* Layout */
+.dashboard {
+  display: flex;
+  height: 100vh;
+  font-family: Arial, sans-serif;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 250px;
+  background-color: #0F172A;
+  color: #F8FAFC;
+  padding: 20px;
+}
+
+.sidebar-title {
+  font-size: 24px;
+  margin-bottom: 40px;
+}
+
+.sidebar-nav {
+  padding-top: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.sidebar-link {
+  color: #94A3B8;
+  text-decoration: none;
+  padding: 16px 24px;
+  border-radius: 5px;
+  transition: background 0.2s;
+}
+
+.sidebar-link:hover {
+  background-color: #1A2538;
+  color: #F8FAFC;
+}
+
+.sidebar-link.active {
+  background-color: #1F6FB2;
+  color: #F8FAFC;
+}
+
+.logo-container {
+  display: flex;
+  justify-content: center; /* horizontal centering */
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;     /* vertical centering if needed */
+  padding: 20px 0;         /* space around the logo */
+  color: #94A3B8;
+}
+
+.separator {
+  height: 1px;                 /* thickness of the line */
+  background-color: #94A3B8;   /* muted gray from your palette */
+  margin: 30px 0;              /* spacing above and below */
+  width: 100%;                 /* full width of sidebar */
+}
+
+/* Logo size */
+.logo {
+  width: 150px;   /* adjust as needed */
+  height: auto;   /* maintain aspect ratio */
+}
+
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  background-color: #F8FAFC;
+  padding: 30px;
+  color: #0F172A;
+}
+
+.main-title {
+  font-size: 28px;
+  margin-bottom: 20px;
+}
+
+/* Cards */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.card {
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.green-text {
+  color: #20B15F;
+}

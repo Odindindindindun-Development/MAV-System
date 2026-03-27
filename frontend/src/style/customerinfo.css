@@ -1,0 +1,288 @@
+.table-container {
+  margin-top: 20px;
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow-x: auto;
+}
+
+.custom-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.custom-table thead {
+  background-color: #f4f6f8;
+}
+
+.custom-table th.action {
+  text-align: center;
+}
+
+.custom-table th {
+  text-align: left;
+  padding: 12px;
+  color: #555;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+
+.custom-table td {
+  padding: 12px;
+  border-top: 1px solid #eee;
+}
+
+.custom-table tbody tr:hover {
+  background-color: #f9fafb;
+  transition: 0.2s;
+}
+
+/* Status badges */
+.status {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status.active {
+  background-color: #e6f7ec;
+  color: #1f9254;
+}
+
+.status.archived {
+  background-color: #fdecea;
+  color: #d93025;
+}
+
+/* Container: flex layout */
+.upper-customerinfo-container {
+  display: flex;
+  justify-content: space-between; /* left and right sides */
+  align-items: center; /* vertical alignment */
+  margin-bottom: 20px;
+}
+
+/* Left side: h1 and p */
+.customerinfo-left h1 {
+  margin: 0;
+  font-size: 28px;
+  color: #0F172A; /* match your theme */
+}
+
+.customerinfo-left p {
+  margin: 5px 0 0 0;
+  font-size: 14px;
+  color: #555;
+}
+
+/* Right side: button */
+.add-customer-btn {
+  padding: 8px 16px;
+  font-size: 14px;
+  background-color: #158145; /* your purple theme */
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.add-customer-btn:hover {
+  background-color: #20B15F; /* hover effect */
+}
+
+.add-customer-btn:disabled {
+  cursor: not-allowed;       /* show disabled cursor */
+  opacity: 0.5;               /* make it look inactive */
+  background-color: #20B15F;  /* keep the color if you want */
+  color: white;
+  pointer-events: none;        /* optional: completely ignore events */
+}
+
+/* Remove hover effect for disabled */
+.add-customer-btn:disabled:hover {
+  background-color: #20B15F;   /* same as normal */
+  color: white;
+}
+
+.tabs-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.tab {
+  padding: 6px 16px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background: #f5f5f5;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.tab.active {
+  background: #0F172A; /* your primary theme color */
+  color: white;
+  border-color: #700B97;
+}
+
+
+/* Modal overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+}
+
+/* Modal content */
+.modal-content {
+  background-color: #fff;
+  padding: 25px;
+  border-radius: 10px;
+  width: 400px;
+  max-width: 90%;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Inputs */
+.modal-content input {
+  width: 100%;
+  padding: 8px 10px;
+  margin-bottom: 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+/* Buttons */
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.submit-btn {
+  background-color: #20B15F; /* your green */
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.submit-btn:hover {
+  background-color: #17A24E;
+}
+
+.cancel-btn {
+  background-color: #C81E1E; /* red cancel */
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.cancel-btn:hover {
+  background-color: #A81717;
+}
+
+/* Form groups */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 12px;
+}
+
+.form-group label {
+  margin-bottom: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #0F172A; /* dark text */
+}
+
+.modal-content input {
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+
+/* Actions column container */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Common button styles */
+.edit-btn,
+.delete-btn,
+.manage-btn,
+.restore-btn {
+  border: none;
+  background: none;          /* removes default button bg */
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+/* Edit button */
+.edit-btn svg {
+  color: #1F6FB2;             /* your theme blue */
+  width: 16px;
+  height: 16px;
+}
+
+.edit-btn:hover svg {
+  color: #14528C;             /* darker blue on hover */
+}
+
+/* Delete button */
+.delete-btn svg {
+  color: #C81E1E;             /* your theme red */
+  width: 16px;
+  height: 16px;
+}
+
+.delete-btn:hover svg {
+  color: #A81717;             /* darker red on hover */
+}
+
+/* Manage button */
+.manage-btn svg {
+  color: #1F6FB2;   /* same blue as edit */
+  width: 17px;
+  height: 17px;
+}
+
+.manage-btn:hover svg {
+  color: #14528C;   /* darker blue */
+}
+
+.restore-btn svg {
+  color: #20B15F;   /* same blue as edit */
+  width: 17px;
+  height: 17px;
+}
+
+.restore-btn:hover svg {
+  color: #17A24E;   /* darker blue */
+}
