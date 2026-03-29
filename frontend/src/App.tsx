@@ -7,7 +7,8 @@ import Inventory from "./pages/Inventory";
 import Billings from "./pages/Billings";
 import FinancialRecords from "./pages/FinancialRecords";
 import Vehicles from './pages/Vehicles';
-
+import JobOrderDetails from './pages/JobOrderDetail';
+import BillingDetail from './pages/BillingDetail';
 import "./style/dashboard.css"
 
 function App() {
@@ -25,8 +26,10 @@ function App() {
           <Routes>
             <Route path="/customers" element={<CustomerInfo />} />
             <Route path="/vehicles" element={<Vehicles />} />
+            <Route path="/joborder/:id" element={<JobOrderDetails />} />
             <Route path="/job-order" element={<JobOrder />} />
             <Route path="/inventory" element={<Inventory />} />
+            <Route path="/billings/:id" element={<BillingDetail />} />
             <Route path="/billings" element={<Billings />} />
             <Route path="/financial-records" element={<FinancialRecords />} />
             <Route path="*" element={<CustomerInfo />} /> {/* default */}

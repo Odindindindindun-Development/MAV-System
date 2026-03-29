@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "../style/customerinfo.css";
 import { FaTrash, FaClipboardList, FaRecycle } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 interface JobOrder {
     JobOrderID: number;
@@ -114,11 +115,11 @@ const JobOrder: React.FC = () => {
             });
     };
 
+    const navigate = useNavigate();
+
     // Edit handler
     const handleManage = (id: number) => {
-        console.log("Edit clicked for:", id);
-        // Open the modal pre-filled for editing
-        // setFormData({...customer}) and setShowModal(true)
+        navigate(`/joborder/${id}`);
     };
 
 

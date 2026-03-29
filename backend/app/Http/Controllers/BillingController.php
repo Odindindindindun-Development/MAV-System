@@ -62,14 +62,16 @@ class BillingController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
-    {
-         $billing = Billing::with([
-            'customer',
-            'jobOrder.vehicle.customer'
-        ])->findOrFail($id);
+    public function show($id)
+{
+    $billing = Billing::with([
+        'customer',
+        'jobOrder.items.stockItem',
+        'jobOrder.labors',
+        'adjustments'
+    ])->findOrFail($id);
 
-        return response()->json($billing);
+    return response()->json($billing);
     }
 
     /**

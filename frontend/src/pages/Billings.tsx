@@ -2,14 +2,19 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "../style/customerinfo.css";
 import { FaEye } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 interface Billing {
     BillingID: number;
     JobOrderID: number;
-    CustomerName?: string;
     TotalAmount: number;
     Status: string;
     created_at: string;
+
+    customer?: {
+        FirstName: string;
+        LastName: string;
+    };
 }
 
 const Billings: React.FC = () => {
@@ -31,9 +36,11 @@ const Billings: React.FC = () => {
             });
     }, []);
 
-    const handleView = (id: number) => {
-        console.log("View billing:", id);
-        // navigate(`/billings/${id}`);
+    const navigate = useNavigate();
+
+    // Edit handler
+    const handleManage = (id: number) => {
+        navigate(`/billings/${id}`);
     };
 
     return (
@@ -73,7 +80,11 @@ const Billings: React.FC = () => {
                                 <tr key={b.BillingID}>
                                     <td>{b.BillingID}</td>
                                     <td>#{b.JobOrderID}</td>
-                                    <td>{b.CustomerName || "—"}</td>
+                                    <td>
+                                        {b.customer
+                                            ? `${b.customer.FirstName} ${b.customer.LastName}`
+                                            : "—"}
+                                    </td>
                                     <td>₱{b.TotalAmount}</td>
                                     <td>
                                         <span className={`status ${b.Status.toLowerCase()}`}>
@@ -84,7 +95,7 @@ const Billings: React.FC = () => {
                                     <td className="action-buttons">
                                         <button
                                             className="view-btn"
-                                            onClick={() => handleView(b.BillingID)}
+                                            onClick={() => handleManage(b.BillingID)}
                                             title="View Billing"
                                         >
                                             <FaEye />

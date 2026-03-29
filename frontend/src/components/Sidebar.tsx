@@ -8,8 +8,8 @@ const Sidebar = () => {
   const menuItems = [
     { name: "Customer Info", path: "/customers" },
     { name: "Vehicles", path: "/vehicles" },
-    { name: "Job Order", path: "/job-order" },
     { name: "Inventory", path: "/inventory" },
+    { name: "Job Order", path: "/job-order" },
     { name: "Billings", path: "/billings" },
     { name: "Financial Records", path: "/financial-records" },
   ];

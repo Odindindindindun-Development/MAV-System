@@ -32,4 +32,10 @@ class Billing extends Model
     {
         return $this->belongsTo(Customer::class, 'CustomerID', 'CustomerID');
     }
+
+    public function adjustments()
+    {
+        return $this->hasMany(BillingAdjustment::class, 'BillingID', 'BillingID');
+    }
+
 }
