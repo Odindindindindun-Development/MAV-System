@@ -18,15 +18,19 @@ class BillingAdjustmentController extends Controller
 
         return DB::transaction(function () use ($request, $billing) {
 
-            // ✅ Create adjustment
+            // Create adjustment
             $adjustment = BillingAdjustment::create([
                 'BillingID' => $billing->BillingID,
                 'Description' => $request->Description,
                 'Amount' => $request->Amount
             ]);
 
-            // ✅ Update total (IMPORTANT)
-            $billing->increment('TotalAmount', $request->Amount);
+            // 🔥 IMPORTANT: reload fresh model before updating
+            $billing->refresh();
+
+            // Update total amount
+            $billing->TotalAmount += $request->Amount;
+            $billing->save();
 
             return response()->json($adjustment, 201);
         });

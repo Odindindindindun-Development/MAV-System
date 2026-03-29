@@ -9,6 +9,7 @@ use App\Http\Controllers\JobOrderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\StockItemController;
 use App\Http\Controllers\VehicleController;
+use App\Http\Controllers\FinancialController;
 
 Route::get('/test', function () {
     return response()->json([
@@ -35,3 +36,4 @@ Route::prefix('job-orders')->group(function () {
 Route::get('stock-items-archived', [StockItemController::class, 'archived']);
 Route::apiResource('stock-items', StockItemController::class);
 Route::apiResource('expenses', ExpenseController::class);
+Route::get('financial-records', [FinancialController::class, 'index']);

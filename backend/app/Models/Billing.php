@@ -38,4 +38,9 @@ class Billing extends Model
         return $this->hasMany(BillingAdjustment::class, 'BillingID', 'BillingID');
     }
 
+    public function payments()
+    {
+        return $this->hasMany(Payment::class, 'BillingID', 'BillingID');
+    }
+
 }
