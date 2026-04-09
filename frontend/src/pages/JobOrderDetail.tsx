@@ -5,6 +5,7 @@ import "../style/JobOrderDetail.css";
 
 interface Vehicle {
   VehicleID: number;
+  Model?: string;
   customer?: { FirstName?: string; LastName?: string };
 }
 
@@ -27,7 +28,7 @@ interface JobOrderLabor {
 interface JobOrder {
   JobOrderID: number;
   DateCreated: string;
-  Status: string; // We'll use this to determine if billing is generated
+  Status: string;
   VehicleID: number;
   vehicle?: Vehicle;
   items?: JobOrderItem[];
@@ -43,51 +44,82 @@ interface StockItem {
 
 const JobOrderDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+
   const [jobOrder, setJobOrder] = useState<JobOrder | null>(null);
   const [stockItems, setStockItems] = useState<StockItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // 🔍 Searchable item
+  const [searchStockText, setSearchStockText] = useState("");
   const [selectedStockID, setSelectedStockID] = useState<number | null>(null);
   const [stockQuantity, setStockQuantity] = useState<number>(1);
 
-  const [laborDescription, setLaborDescription] = useState<string>("");
-  const [laborCost, setLaborCost] = useState<number>(0);
+  // Labor
+  const [laborDescription, setLaborDescription] = useState("");
+  const [laborCost, setLaborCost] = useState(0);
 
   useEffect(() => {
     if (!id) return;
 
-    const fetchJobOrder = axios.get<JobOrder>(`http://localhost:8000/api/job-orders/${id}`);
-    const fetchStock = axios.get<StockItem[]>(`http://localhost:8000/api/stock-items`);
-
-    Promise.all([fetchJobOrder, fetchStock])
+    Promise.all([
+      axios.get(`http://localhost:8000/api/job-orders/${id}`),
+      axios.get(`http://localhost:8000/api/stock-items`)
+    ])
       .then(([jobRes, stockRes]) => {
         setJobOrder(jobRes.data);
         setStockItems(stockRes.data);
         setLoading(false);
       })
       .catch(() => {
-        setError("Failed to fetch job order or stock items");
+        setError("Failed to fetch data");
         setLoading(false);
       });
   }, [id]);
+
+  // 🔍 FILTER ITEMS
+  const filteredStock = stockItems.filter(item =>
+    item.ItemName.toLowerCase().includes(searchStockText.toLowerCase()) ||
+    String(item.StockItemID).includes(searchStockText)
+  );
+
+  // 🎯 MATCH ID
+  useEffect(() => {
+    const match = stockItems.find(
+      s => String(s.StockItemID) === searchStockText
+    );
+
+    if (match) setSelectedStockID(match.StockItemID);
+    else setSelectedStockID(null);
+  }, [searchStockText, stockItems]);
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>{error}</p>;
   if (!jobOrder) return null;
 
-  // Determine billing state from backend status
-  const billingGenerated = jobOrder.Status === "Completed"; // or "Billed" depending on your backend
+  const billingGenerated = jobOrder.Status === "Completed";
 
-  // --- Handlers ---
+  const selectedItem = stockItems.find(
+    s => s.StockItemID === selectedStockID
+  );
+
+  // ➕ ADD ITEM
   const handleAddItem = async () => {
     if (!selectedStockID || stockQuantity <= 0 || billingGenerated) return;
+
     try {
       const res = await axios.post(
         `http://localhost:8000/api/job-orders/${jobOrder.JobOrderID}/items`,
         { StockItemID: selectedStockID, Quantity: stockQuantity }
       );
-      setJobOrder(prev => prev ? { ...prev, items: [...(prev.items || []), res.data] } : prev);
+
+      setJobOrder(prev =>
+        prev
+          ? { ...prev, items: [...(prev.items || []), res.data] }
+          : prev
+      );
+
+      setSearchStockText("");
       setSelectedStockID(null);
       setStockQuantity(1);
     } catch (err: any) {
@@ -95,14 +127,22 @@ const JobOrderDetails: React.FC = () => {
     }
   };
 
+  // ➕ ADD LABOR
   const handleAddLabor = async () => {
     if (!laborDescription || laborCost <= 0 || billingGenerated) return;
+
     try {
       const res = await axios.post(
         `http://localhost:8000/api/job-orders/${jobOrder.JobOrderID}/labors`,
         { Description: laborDescription, Cost: laborCost }
       );
-      setJobOrder(prev => prev ? { ...prev, labors: [...(prev.labors || []), res.data] } : prev);
+
+      setJobOrder(prev =>
+        prev
+          ? { ...prev, labors: [...(prev.labors || []), res.data] }
+          : prev
+      );
+
       setLaborDescription("");
       setLaborCost(0);
     } catch {
@@ -110,115 +150,132 @@ const JobOrderDetails: React.FC = () => {
     }
   };
 
-  const totalItems = jobOrder.items?.reduce(
-    (sum, item) => sum + item.Quantity * item.UnitPrice,
-    0
-  ) || 0;
+  // 💰 TOTALS
+  const totalItems =
+    jobOrder.items?.reduce(
+      (sum, item) => sum + item.Quantity * item.UnitPrice,
+      0
+    ) || 0;
 
-  const totalLabor = jobOrder.labors?.reduce(
-    (sum, labor) => sum + Number(labor.Cost),
-    0
-  ) || 0;
+  const totalLabor =
+    jobOrder.labors?.reduce((sum, l) => sum + Number(l.Cost), 0) || 0;
 
   const grandTotal = totalItems + totalLabor;
 
   return (
     <div className="joborder-container">
       <h1>Job Order Details</h1>
+
+      {/* ✅ RESTORED INFO */}
       <div className="joborder-card">
         <p><strong>ID:</strong> {jobOrder.JobOrderID}</p>
         <p><strong>Status:</strong> {jobOrder.Status}</p>
-        <p><strong>Date Created:</strong> {jobOrder.DateCreated}</p>
+        <p><strong>Date:</strong> {jobOrder.DateCreated}</p>
         <p><strong>Vehicle ID:</strong> {jobOrder.VehicleID}</p>
+
         {jobOrder.vehicle?.customer && (
           <p>
-            Customer: {jobOrder.vehicle.customer.FirstName} {jobOrder.vehicle.customer.LastName}
+            <strong>Customer:</strong>{" "}
+            {jobOrder.vehicle.customer.FirstName}{" "}
+            {jobOrder.vehicle.customer.LastName}
           </p>
+        )}
+
+        {jobOrder.vehicle?.Model && (
+          <p><strong>Vehicle Model:</strong> {jobOrder.vehicle.Model}</p>
         )}
       </div>
 
-      {/* Inventory Form */}
+      {/* ITEMS */}
       <div className="joborder-card">
         <h2>Items Used</h2>
+
         <table className="item-table">
           <thead>
             <tr>
               <th>Item</th>
               <th>Qty</th>
-              <th>Cost</th>
+              <th>Price</th>
               <th>Total</th>
               {!billingGenerated && <th>Action</th>}
             </tr>
           </thead>
+
           <tbody>
             {jobOrder.items?.map(item => (
               <tr key={item.JobOrderItemID}>
-                <td>{item.stock_item?.ItemName || item.StockItemID}</td>
+                <td>{item.stock_item?.ItemName}</td>
                 <td>{item.Quantity}</td>
                 <td>{item.UnitPrice}</td>
                 <td>{item.Quantity * item.UnitPrice}</td>
-                {!billingGenerated && (
-                  <td>
-                    <button
-                      className="remove-btn"
-                      onClick={async () => {
-                        try {
-                          await axios.delete(
-                            `http://localhost:8000/api/job-orders/items/${item.JobOrderItemID}`
-                          );
-                          setJobOrder(prev =>
-                            prev
-                              ? {
-                                  ...prev,
-                                  items: prev.items!.filter(
-                                    i => i.JobOrderItemID !== item.JobOrderItemID
-                                  ),
-                                }
-                              : prev
-                          );
-                        } catch {
-                          alert("Failed to remove item");
-                        }
-                      }}
-                    >
-                      Remove
-                    </button>
-                  </td>
-                )}
+                <td>
+  <button
+    className="remove-btn"
+    onClick={async () => {
+      try {
+        await axios.delete(
+          `http://localhost:8000/api/job-orders/items/${item.JobOrderItemID}`
+        );
+
+        setJobOrder(prev =>
+          prev
+            ? {
+                ...prev,
+                items: prev.items!.filter(
+                  i => i.JobOrderItemID !== item.JobOrderItemID
+                ),
+              }
+            : prev
+        );
+      } catch {
+        alert("Failed to remove item");
+      }
+    }}
+  >
+    Remove
+  </button>
+</td>
               </tr>
             ))}
 
-            {/* Input Row */}
             {!billingGenerated && (
               <tr>
                 <td>
-                  <select
-                    value={selectedStockID || ""}
-                    onChange={(e) => setSelectedStockID(Number(e.target.value))}
-                  >
-                    <option value="">Select item</option>
-                    {stockItems.map(stock => (
-                      <option key={stock.StockItemID} value={stock.StockItemID}>
-                        {stock.ItemName}
+                  <input
+                    placeholder="Search item..."
+                    value={searchStockText}
+                    onChange={(e) => setSearchStockText(e.target.value)}
+                    list="stock-options"
+                  />
+                  <datalist id="stock-options">
+                    {filteredStock.map(item => (
+                      <option
+                        key={item.StockItemID}
+                        value={item.StockItemID}
+                      >
+                        {item.ItemName}
                       </option>
                     ))}
-                  </select>
+                  </datalist>
                 </td>
+
                 <td>
                   <input
                     type="number"
                     min={1}
                     value={stockQuantity}
-                    onChange={(e) => setStockQuantity(Number(e.target.value))}
+                    onChange={(e) =>
+                      setStockQuantity(Number(e.target.value))
+                    }
                   />
                 </td>
+
+                <td>{selectedItem?.UnitPrice || "-"}</td>
+
                 <td>
-                  {stockItems.find(s => s.StockItemID === selectedStockID)?.UnitPrice || "-"}
+                  {(selectedItem?.UnitPrice || 0) * stockQuantity}
                 </td>
-                <td>
-                  {(stockItems.find(s => s.StockItemID === selectedStockID)?.UnitPrice || 0) *
-                    stockQuantity}
-                </td>
+
                 <td>
                   <button onClick={handleAddItem}>Add</button>
                 </td>
@@ -227,7 +284,8 @@ const JobOrderDetails: React.FC = () => {
           </tbody>
         </table>
       </div>
-      <h3>Total Items: ${totalItems}</h3>
+
+      <h3>Total Items: {totalItems}</h3>
 
       {/* Labor Form */}
       <div className="joborder-card">

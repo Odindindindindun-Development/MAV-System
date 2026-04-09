@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "../style/customerinfo.css";
-import { FaTrash, FaClipboardList, FaRecycle } from "react-icons/fa";
+import { FaClipboardList } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 interface JobOrder {
     JobOrderID: number;
     DateCreated: string;
     Status: string;
-    IsArchived: boolean;
     VehicleID: number;
     vehicle?: any;
 }
@@ -28,120 +27,94 @@ const JobOrder: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [showModal, setShowModal] = useState(false);
-    const [activeTab, setActiveTab] = useState('active'); // 'active' or 'archived'
 
-    // Form states
     const [formData, setFormData] = useState({
         DateCreated: "",
         Status: "",
         VehicleID: "",
     });
+
     const [searchText, setSearchText] = useState("");
+
+    // ✅ PAGINATION STATE
+    const [currentPage, setCurrentPage] = useState(1);
+    const rowsPerPage = 10;
+
+    const navigate = useNavigate();
 
     // FETCH JOB ORDERS
     useEffect(() => {
-        setLoading(true);
-        setError("");
-
-        const endpoint =
-            activeTab === "active"
-                ? "http://127.0.0.1:8000/api/job-orders"
-                : "http://127.0.0.1:8000/api/job-orders-archived";
-
-        axios
-            .get(endpoint)
-            .then((res) => {
+        axios.get("http://127.0.0.1:8000/api/job-orders")
+            .then(res => {
                 setJobOrders(res.data);
                 setLoading(false);
             })
-            .catch((err) => {
+            .catch(err => {
                 console.error(err);
                 setError("Failed to fetch job orders");
                 setLoading(false);
             });
-    }, [activeTab]); // 🔹 runs whenever activeTab changes
+    }, []);
 
     // FETCH VEHICLES
     useEffect(() => {
-        axios
-            .get("http://127.0.0.1:8000/api/vehicles")
-            .then((res) => setVehicles(res.data))
-            .catch((err) => console.error(err));
+        axios.get("http://127.0.0.1:8000/api/vehicles")
+            .then(res => setVehicles(res.data))
+            .catch(err => console.error(err));
     }, []);
 
-    // HANDLE INPUT CHANGE
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    // HANDLE INPUT
+    const handleChange = (e: any) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
+        setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    // UPDATE VehicleID BASED ON SELECTION
+    // MATCH VEHICLE FROM SEARCH
     useEffect(() => {
-        const matchedVehicle = vehicles.find(
-            v => String(v.VehicleID) === searchText
-        );
-        if (matchedVehicle) {
+        const matched = vehicles.find(v => String(v.VehicleID) === searchText);
+
+        if (matched) {
             setFormData(prev => ({
                 ...prev,
-                VehicleID: String(matchedVehicle.VehicleID), // convert to string
+                VehicleID: String(matched.VehicleID),
             }));
         } else {
             setFormData(prev => ({ ...prev, VehicleID: "" }));
         }
     }, [searchText, vehicles]);
 
-    // SUBMIT FORM
-    const handleSubmit = (e: React.FormEvent) => {
+    // SUBMIT
+    const handleSubmit = (e: any) => {
         e.preventDefault();
 
         axios.post("http://127.0.0.1:8000/api/job-orders", {
             DateCreated: formData.DateCreated,
             Status: formData.Status,
-            VehicleID: Number(formData.VehicleID), // convert to number here
+            VehicleID: Number(formData.VehicleID),
         })
-            .then((res) => {
-                setJobOrders((prev) => [...prev, res.data.data]);
-                setShowModal(false);
-                setFormData({
-                    DateCreated: "",
-                    Status: "",
-                    VehicleID: "",
-                });
-                setSearchText("");
-            })
-            .catch((err) => {
-                console.error(err);
-                alert("Failed to create job order");
+        .then(res => {
+            setJobOrders(prev => [...prev, res.data.data]);
+            setShowModal(false);
+            setFormData({
+                DateCreated: "",
+                Status: "",
+                VehicleID: "",
             });
+            setSearchText("");
+            setCurrentPage(1); // reset page
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Failed to create job order");
+        });
     };
 
-    const navigate = useNavigate();
-
-    // Edit handler
     const handleManage = (id: number) => {
         navigate(`/joborder/${id}`);
     };
 
-
-    // DELETE / ARCHIVE
-    const handleDelete = (id: number) => {
-        axios
-            .delete(`http://127.0.0.1:8000/api/job-orders/${id}`)
-            .then(() => {
-                setJobOrders((prev) =>
-                    prev.map((j) =>
-                        j.JobOrderID === id ? { ...j, IsArchived: true } : j
-                    )
-                );
-            })
-            .catch((err) => {
-                console.error(err);
-                alert("Failed to delete job order");
-            });
-    };
-
-    // FILTERED VEHICLES FOR SEARCHABLE DROPDOWN
-    const filteredVehicles = vehicles.filter((v) => {
+    // FILTER VEHICLES
+    const filteredVehicles = vehicles.filter(v => {
         const name = `${v.customer?.FirstName || ""} ${v.customer?.LastName || ""}`;
         return (
             name.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -150,22 +123,14 @@ const JobOrder: React.FC = () => {
     });
 
     const selectedVehicle = vehicles.find(
-        (v) => v.VehicleID === Number(formData.VehicleID)
+        v => v.VehicleID === Number(formData.VehicleID)
     );
 
-    const handleRestore = (id: number) => {
-    axios
-        .patch(`http://127.0.0.1:8000/api/job-orders/${id}`, {
-            IsArchived: false
-        })
-        .then(() => {
-            setJobOrders(prev => prev.filter(j => j.JobOrderID !== id));
-        })
-        .catch(err => {
-            console.error(err);
-            alert("Failed to restore job order");
-        });
-};
+    // ✅ PAGINATION LOGIC
+    const indexOfLastRow = currentPage * rowsPerPage;
+    const indexOfFirstRow = indexOfLastRow - rowsPerPage;
+    const currentRows = jobOrders.slice(indexOfFirstRow, indexOfLastRow);
+    const totalPages = Math.ceil(jobOrders.length / rowsPerPage);
 
     return (
         <div>
@@ -175,30 +140,13 @@ const JobOrder: React.FC = () => {
                     <h1>Job Orders</h1>
                     <p>Manage and track all service job orders.</p>
                 </div>
-                <div className="customerinfo-right">
-                    <div className="tabs-container">
-                        <button
-                            className={activeTab === 'active' ? 'tab active' : 'tab'}
-                            onClick={() => setActiveTab('active')}
-                        >
-                            Active
-                        </button>
-                        <button
-                            className={activeTab === 'archived' ? 'tab active' : 'tab'}
-                            onClick={() => setActiveTab('archived')}
-                        >
-                            Archived
-                        </button>
 
-                        <button
-                            className="add-customer-btn"
-                            disabled={activeTab === "archived"}
-                            onClick={() => setShowModal(true)}
-                        >
-                            + Add Job Order
-                        </button>
-                    </div>
-                </div>
+                <button
+                    className="add-customer-btn"
+                    onClick={() => setShowModal(true)}
+                >
+                    + Add Job Order
+                </button>
             </div>
 
             {/* MODAL */}
@@ -206,6 +154,7 @@ const JobOrder: React.FC = () => {
                 <div className="modal-overlay">
                     <div className="modal-content">
                         <h2>Add Job Order</h2>
+
                         <form onSubmit={handleSubmit}>
                             <div className="form-group">
                                 <label>Date</label>
@@ -218,38 +167,31 @@ const JobOrder: React.FC = () => {
                                 />
                             </div>
 
-
-                            {/* 🔹 SEARCHABLE DROPDOWN */}
-                            {/* SEARCHABLE DROPDOWN */}
                             <div className="form-group">
                                 <label>Vehicle / Customer</label>
                                 <input
                                     type="text"
-                                    placeholder="Type Vehicle model or Customer name..."
+                                    placeholder="Type Vehicle ID or Customer..."
                                     value={searchText}
                                     onChange={(e) => setSearchText(e.target.value)}
                                     list="vehicle-options"
                                     required
                                 />
+
                                 <datalist id="vehicle-options">
-                                    {filteredVehicles.map((v) => (
-                                        <option
-                                            key={v.VehicleID}
-                                            value={v.VehicleID} // sets VehicleID when selected
-                                        >
+                                    {filteredVehicles.map(v => (
+                                        <option key={v.VehicleID} value={v.VehicleID}>
                                             {v.Model} - {v.customer?.FirstName} {v.customer?.LastName}
                                         </option>
                                     ))}
                                 </datalist>
                             </div>
 
-                            {/* SHOW CUSTOMER NAME & VEHICLE MODEL */}
                             {selectedVehicle && (
                                 <>
                                     <div className="form-group">
                                         <label>Customer</label>
                                         <input
-                                            type="text"
                                             value={`${selectedVehicle.customer?.FirstName} ${selectedVehicle.customer?.LastName}`}
                                             disabled
                                         />
@@ -258,8 +200,7 @@ const JobOrder: React.FC = () => {
                                     <div className="form-group">
                                         <label>Vehicle Model</label>
                                         <input
-                                            type="text"
-                                            value={selectedVehicle.Model || ""}
+                                            value={selectedVehicle.Model}
                                             disabled
                                         />
                                     </div>
@@ -298,52 +239,61 @@ const JobOrder: React.FC = () => {
                                 <th>Status</th>
                                 <th>Vehicle</th>
                                 <th>Customer</th>
-                                <th>State</th>
                                 <th className="action">Actions</th>
                             </tr>
                         </thead>
+
                         <tbody>
-                            {jobOrders.map((j) => (
+                            {currentRows.map(j => (
                                 <tr key={j.JobOrderID}>
                                     <td>{j.JobOrderID}</td>
                                     <td>{j.DateCreated.split("T")[0]}</td>
                                     <td>{j.Status}</td>
                                     <td>#{j.VehicleID}</td>
-                                    <td>{j.vehicle?.customer?.FirstName} {j.vehicle?.customer?.LastName}</td>
-                                    <td>{j.IsArchived ? "Archived" : "Active"}</td>
-                                    <td className="action-buttons">
-                                        {activeTab === "active" ? (
-                                            <>
-                                                <button
-                                                    className="manage-btn"
-                                                    onClick={() => handleManage(j.JobOrderID)}
-                                                    title="Manage Job Order"
-                                                >
-                                                    <FaClipboardList />
-                                                </button>
+                                    <td>
+                                        {j.vehicle?.customer?.FirstName}{" "}
+                                        {j.vehicle?.customer?.LastName}
+                                    </td>
 
-                                                <button
-                                                    className="delete-btn"
-                                                    onClick={() => handleDelete(j.JobOrderID)}
-                                                >
-                                                    <FaTrash />
-                                                </button>
-                                            </>
-                                        ) : (
-                                            // Archived tab → only restore
-                                            <button
-                                                className="restore-btn"
-                                                onClick={() => handleRestore(j.JobOrderID)}
-                                                title="Restore Job Order"
-                                            >
-                                                <FaRecycle />
-                                            </button>
-                                        )}
+                                    <td className="action-buttons">
+                                        <button
+                                            className="manage-btn"
+                                            onClick={() => handleManage(j.JobOrderID)}
+                                        >
+                                            <FaClipboardList />
+                                        </button>
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
+
+                    {/* ✅ PAGINATION */}
+                    <div className="pagination">
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        >
+                            Prev
+                        </button>
+
+                        {[...Array(totalPages)].map((_, i) => (
+                            <button
+                                key={i}
+                                className={currentPage === i + 1 ? "active-page" : ""}
+                                onClick={() => setCurrentPage(i + 1)}
+                            >
+                                {i + 1}
+                            </button>
+                        ))}
+
+                        <button
+                            onClick={() =>
+                                setCurrentPage(prev => Math.min(prev + 1, totalPages))
+                            }
+                        >
+                            Next
+                        </button>
+                    </div>
                 </div>
             )}
         </div>

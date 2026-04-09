@@ -12,6 +12,7 @@ class Vehicle extends Model
         'Model',
         'Year',
         'CustomerID',
+        'IsArchived'
     ];
 
     protected $casts = [

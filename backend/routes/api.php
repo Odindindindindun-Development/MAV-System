@@ -11,16 +11,21 @@ use App\Http\Controllers\StockItemController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\FinancialController;
 
-Route::get('/test', function () {
-    return response()->json([
-        'message' => 'Laravel 13 API working'
-    ]);
-});
 
 Route::apiResource('customers', CustomerController::class);
+Route::get('customers-archived', [CustomerController::class, 'archived']);
+Route::patch('customers/{id}/restore', [CustomerController::class, 'restore']);
+
 Route::apiResource('vehicles', VehicleController::class);
+Route::get('vehicles-archived', [VehicleController::class, 'archived']);
+Route::patch('vehicles/{id}/restore', [VehicleController::class, 'restore']);
+
 Route::apiResource('billings', BillingController::class);
-Route::post('billings/{billing}/adjustments', [BillingAdjustmentController::class, 'store']);
+Route::prefix('billings/{billing}')->group(function () {
+    Route::post('/adjustments', [BillingAdjustmentController::class, 'store']);
+    Route::delete('/adjustments/{adjustment}', [BillingAdjustmentController::class, 'destroy']);
+});
+
 Route::apiResource('payments', PaymentController::class);
 Route::get('job-orders-archived', [JobOrderController::class, 'archived']);
 Route::apiResource('job-orders', JobOrderController::class);
@@ -33,7 +38,10 @@ Route::prefix('job-orders')->group(function () {
 
     Route::post('{jobOrder}/generate-billing', [JobOrderController::class, 'generateBilling']);
 });
+
 Route::get('stock-items-archived', [StockItemController::class, 'archived']);
+Route::patch('stock-items/{id}', [StockItemController::class, 'restore']);
 Route::apiResource('stock-items', StockItemController::class);
+
 Route::apiResource('expenses', ExpenseController::class);
 Route::get('financial-records', [FinancialController::class, 'index']);

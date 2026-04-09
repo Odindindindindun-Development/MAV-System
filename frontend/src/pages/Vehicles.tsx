@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import "../style/customerinfo.css"; 
-import { FaPen, FaTrash } from "react-icons/fa";
+import "../style/customerinfo.css";
+import { FaPen, FaTrash, FaRecycle } from "react-icons/fa";
 
 interface Customer {
   CustomerID: number;
@@ -15,6 +15,7 @@ interface Vehicle {
   Model: string;
   Year: number;
   CustomerID: number;
+  IsArchived: number;
   customer?: Customer;
 }
 
@@ -22,9 +23,13 @@ const Vehicles: React.FC = () => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [activeTab, setActiveTab] = useState("active");
+
   const [showModal, setShowModal] = useState(false);
-  const [searchCustomerText, setSearchCustomerText] = useState(""); // 🔹 for searchable customer
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentVehicleID, setCurrentVehicleID] = useState<number | null>(null);
+
+  const [searchCustomerText, setSearchCustomerText] = useState("");
 
   const [formData, setFormData] = useState({
     Manufacturer: "",
@@ -33,174 +38,228 @@ const Vehicles: React.FC = () => {
     CustomerID: "",
   });
 
-  // Fetch vehicles
+  // FETCH
   useEffect(() => {
-    axios.get("http://127.0.0.1:8000/api/vehicles")
-      .then(res => { setVehicles(res.data); setLoading(false); })
-      .catch(err => { console.error(err); setError("Failed to fetch vehicles"); setLoading(false); });
-    
-    // Fetch customers
-    axios.get("http://127.0.0.1:8000/api/customers")
-      .then(res => setCustomers(res.data))
-      .catch(err => console.error(err));
-  }, []);
+    setLoading(true);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const endpoint =
+      activeTab === "active"
+        ? "http://127.0.0.1:8000/api/vehicles"
+        : "http://127.0.0.1:8000/api/vehicles-archived";
+
+    axios.get(endpoint)
+      .then(res => {
+        setVehicles(res.data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+
+    axios.get("http://127.0.0.1:8000/api/customers")
+      .then(res => setCustomers(res.data));
+  }, [activeTab]);
+
+  const handleChange = (e: any) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Update CustomerID based on search selection
-  useEffect(() => {
-    const matchedCustomer = customers.find(c => String(c.CustomerID) === searchCustomerText);
-    if (matchedCustomer) {
-      setFormData(prev => ({ ...prev, CustomerID: String(matchedCustomer.CustomerID) }));
-    } else {
-      setFormData(prev => ({ ...prev, CustomerID: "" }));
-    }
-  }, [searchCustomerText, customers]);
+  // 🔥 IMPORTANT: sync input → CustomerID
+  const handleCustomerSearch = (value: string) => {
+    setSearchCustomerText(value);
 
-  const handleEdit = (vehicle: Vehicle) => {
-    setFormData({
-      Manufacturer: vehicle.Manufacturer,
-      Model: vehicle.Model,
-      Year: vehicle.Year.toString(),
-      CustomerID: vehicle.CustomerID.toString(),
+    // Try match by ID OR name
+    const matched = customers.find(c => {
+      const fullName = `${c.FirstName} ${c.LastName}`.toLowerCase();
+      return (
+        String(c.CustomerID) === value ||
+        fullName === value.toLowerCase()
+      );
     });
-    setSearchCustomerText(vehicle.CustomerID.toString());
+
+    if (matched) {
+      setFormData(prev => ({
+        ...prev,
+        CustomerID: String(matched.CustomerID)
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        CustomerID: ""
+      }));
+    }
+  };
+
+  // EDIT
+  const handleEdit = (v: Vehicle) => {
+    setFormData({
+      Manufacturer: v.Manufacturer,
+      Model: v.Model,
+      Year: v.Year.toString(),
+      CustomerID: v.CustomerID.toString(),
+    });
+
+    setSearchCustomerText(
+      v.customer
+        ? `${v.customer.FirstName} ${v.customer.LastName}`
+        : v.CustomerID.toString()
+    );
+
+    setCurrentVehicleID(v.VehicleID);
+    setIsEditing(true);
     setShowModal(true);
   };
 
-  const handleDelete = (vehicleID: number) => {
-    if (window.confirm("Are you sure you want to delete this vehicle?")) {
-      axios.delete(`http://127.0.0.1:8000/api/vehicles/${vehicleID}`)
-        .then(() => setVehicles(prev => prev.filter(v => v.VehicleID !== vehicleID)))
-        .catch(err => { console.error(err); alert("Failed to delete vehicle"); });
+  // ARCHIVE
+  const handleArchive = (id: number) => {
+    axios.delete(`http://127.0.0.1:8000/api/vehicles/${id}`)
+      .then(() => {
+        setVehicles(prev => prev.filter(v => v.VehicleID !== id));
+      });
+  };
+
+  // RESTORE
+  const handleRestore = (id: number) => {
+    axios.patch(`http://127.0.0.1:8000/api/vehicles/${id}/restore`)
+      .then(() => {
+        setVehicles(prev => prev.filter(v => v.VehicleID !== id));
+      });
+  };
+
+  // SUBMIT
+  const handleSubmit = (e: any) => {
+    e.preventDefault();
+
+    if (!formData.CustomerID) {
+      alert("Please select a valid customer");
+      return;
+    }
+
+    if (isEditing && currentVehicleID) {
+      axios.put(`http://127.0.0.1:8000/api/vehicles/${currentVehicleID}`, formData)
+        .then(res => {
+          setVehicles(prev =>
+            prev.map(v =>
+              v.VehicleID === currentVehicleID ? res.data : v
+            )
+          );
+          setShowModal(false);
+          resetForm();
+        });
+    } else {
+      axios.post("http://127.0.0.1:8000/api/vehicles", formData)
+        .then(res => {
+          setVehicles(prev => [...prev, res.data]);
+          setShowModal(false);
+          resetForm();
+        });
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    axios.post("http://127.0.0.1:8000/api/vehicles", formData)
-      .then(res => {
-        setVehicles(prev => [...prev, res.data]);
-        setShowModal(false);
-        setFormData({ Manufacturer: "", Model: "", Year: "", CustomerID: "" });
-        setSearchCustomerText("");
-      })
-      .catch(err => { console.error(err); alert("Failed to add vehicle"); });
+  const resetForm = () => {
+    setFormData({
+      Manufacturer: "",
+      Model: "",
+      Year: "",
+      CustomerID: "",
+    });
+    setSearchCustomerText("");
+    setIsEditing(false);
+    setCurrentVehicleID(null);
   };
 
-  // Filter customers dynamically by id or name
+  // FILTER suggestions
   const filteredCustomers = customers.filter(c => {
     const name = `${c.FirstName} ${c.LastName}`;
-    return name.toLowerCase().includes(searchCustomerText.toLowerCase()) || 
-           String(c.CustomerID).includes(searchCustomerText);
+    return name.toLowerCase().includes(searchCustomerText.toLowerCase()) ||
+      String(c.CustomerID).includes(searchCustomerText);
   });
-
-  // Selected customer for display
-  const selectedCustomer = customers.find(c => String(c.CustomerID) === formData.CustomerID);
 
   return (
     <div>
-      {/* Header */}
+      {/* HEADER */}
       <div className="upper-customerinfo-container">
         <div className="customerinfo-left">
           <h1>Vehicles</h1>
-          <p>Track and manage all vehicles in the system.</p>
+          <p>Manage vehicles</p>
         </div>
-        <div className="customerinfo-right">
-          <button className="add-customer-btn" onClick={() => setShowModal(true)}>
+
+        <div className="tabs-container">
+          <button className={activeTab === "active" ? "tab active" : "tab"} onClick={() => setActiveTab("active")}>
+            Active
+          </button>
+
+          <button className={activeTab === "archived" ? "tab active" : "tab"} onClick={() => setActiveTab("archived")}>
+            Archived
+          </button>
+
+          <button
+            className="add-customer-btn"
+            disabled={activeTab === "archived"}
+            onClick={() => {
+              setShowModal(true);
+              setIsEditing(false);
+            }}
+          >
             + Add Vehicle
           </button>
         </div>
       </div>
 
-      {/* Modal */}
+      {/* MODAL */}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <h2>Add Vehicle</h2>
+            <h2>{isEditing ? "Edit Vehicle" : "Add Vehicle"}</h2>
+
             <form onSubmit={handleSubmit}>
               <div className="form-group">
-                <label htmlFor="Manufacturer">Manufacturer</label>
-                <input
-                  id="Manufacturer"
-                  type="text"
-                  name="Manufacturer"
-                  value={formData.Manufacturer}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="Model">Model</label>
-                <input
-                  id="Model"
-                  type="text"
-                  name="Model"
-                  value={formData.Model}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="Year">Year</label>
-                <input
-                  id="Year"
-                  type="number"
-                  name="Year"
-                  value={formData.Year}
-                  onChange={handleChange}
-                  required
-                />
+                <label>Manufacturer</label>
+                <input name="Manufacturer" value={formData.Manufacturer} onChange={handleChange} required />
               </div>
 
-              {/* 🔹 Searchable Customer */}
+              <div className="form-group">
+                <label>Model</label>
+                <input name="Model" value={formData.Model} onChange={handleChange} required />
+              </div>
+
+              <div className="form-group">
+                <label>Year</label>
+                <input type="number" name="Year" value={formData.Year} onChange={handleChange} required />
+              </div>
+
+              {/* ✅ SEARCHABLE INPUT (FIXED) */}
               <div className="form-group">
                 <label>Customer</label>
                 <input
-                  type="text"
-                  placeholder="Type Customer ID or Name..."
                   value={searchCustomerText}
-                  onChange={(e) => setSearchCustomerText(e.target.value)}
-                  list="customer-options"
+                  onChange={(e) => handleCustomerSearch(e.target.value)}
+                  list="customers"
+                  placeholder="Type ID or Name..."
                   required
                 />
-                <datalist id="customer-options">
+                <datalist id="customers">
                   {filteredCustomers.map(c => (
-                    <option key={c.CustomerID} value={c.CustomerID}>
-                      {c.FirstName} {c.LastName} (ID: {c.CustomerID})
-                    </option>
+                    <option key={c.CustomerID} value={`${c.FirstName} ${c.LastName}`} />
                   ))}
                 </datalist>
               </div>
 
-              {/* Show selected customer name */}
-              {selectedCustomer && (
-                <div className="form-group">
-                  <label>Selected Customer</label>
-                  <input
-                    type="text"
-                    value={`${selectedCustomer.FirstName} ${selectedCustomer.LastName}`}
-                    disabled
-                  />
-                </div>
-              )}
-
               <div className="modal-buttons">
-                <button type="submit" className="submit-btn">Submit</button>
-                <button type="button" className="cancel-btn" onClick={() => setShowModal(false)}>Cancel</button>
+                <button className="submit-btn" type="submit">
+                  {isEditing ? "Update" : "Submit"}
+                </button>
+
+                <button type="button" className="cancel-btn" onClick={() => setShowModal(false)}>
+                  Cancel
+                </button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* Table */}
-      {loading && <p>Loading...</p>}
-      {error && <p>{error}</p>}
-      {!loading && !error && (
+      {/* TABLE */}
+      {!loading && (
         <div className="table-container">
           <table className="custom-table">
             <thead>
@@ -210,9 +269,11 @@ const Vehicles: React.FC = () => {
                 <th>Model</th>
                 <th>Year</th>
                 <th>Customer</th>
+                <th>Status</th>
                 <th className="action">Actions</th>
               </tr>
             </thead>
+
             <tbody>
               {vehicles.map(v => (
                 <tr key={v.VehicleID}>
@@ -220,10 +281,35 @@ const Vehicles: React.FC = () => {
                   <td>{v.Manufacturer}</td>
                   <td>{v.Model}</td>
                   <td>{v.Year}</td>
-                  <td>{v.customer ? `${v.customer.FirstName} ${v.customer.LastName}` : v.CustomerID}</td>
+
+                  <td>
+                    {v.customer
+                      ? `${v.customer.FirstName} ${v.customer.LastName}`
+                      : v.CustomerID}
+                  </td>
+
+                  <td>
+                    <span className={v.IsArchived ? "status archived" : "status active"}>
+                      {v.IsArchived ? "Archived" : "Active"}
+                    </span>
+                  </td>
+
                   <td className="action-buttons">
-                    <button className="edit-btn" onClick={() => handleEdit(v)} title="Edit Vehicle"><FaPen /></button>
-                    <button className="delete-btn" onClick={() => handleDelete(v.VehicleID)} title="Delete Vehicle"><FaTrash /></button>
+                    {activeTab === "active" ? (
+                      <>
+                        <button className="edit-btn" onClick={() => handleEdit(v)}>
+                          <FaPen />
+                        </button>
+
+                        <button className="delete-btn" onClick={() => handleArchive(v.VehicleID)}>
+                          <FaTrash />
+                        </button>
+                      </>
+                    ) : (
+                      <button className="restore-btn" onClick={() => handleRestore(v.VehicleID)}>
+                        <FaRecycle />
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

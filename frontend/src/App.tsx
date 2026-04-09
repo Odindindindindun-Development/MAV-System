@@ -12,11 +12,6 @@ import BillingDetail from './pages/BillingDetail';
 import "./style/dashboard.css"
 
 function App() {
-  useEffect(() => {
-    fetch("http://127.0.0.1:8000/api/test")
-      .then(res => res.json())
-      .then(data => console.log(data));
-  }, []);
 
   return (
     <Router>

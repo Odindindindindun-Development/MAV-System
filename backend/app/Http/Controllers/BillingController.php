@@ -68,7 +68,8 @@ class BillingController extends Controller
         'customer',
         'jobOrder.items.stockItem',
         'jobOrder.labors',
-        'adjustments'
+        'adjustments',
+        'payments'
     ])->findOrFail($id);
 
     return response()->json($billing);

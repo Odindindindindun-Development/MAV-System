@@ -12,13 +12,11 @@ class JobOrder extends Model
     protected $fillable = [
         'DateCreated',
         'Status',
-        'IsArchived',
         'VehicleID',
     ];
 
     protected $casts = [
         'DateCreated' => 'date',
-        'IsArchived' => 'boolean',
     ];
 
     public function vehicle()

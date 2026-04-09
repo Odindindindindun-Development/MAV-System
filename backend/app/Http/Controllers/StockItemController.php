@@ -2,14 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\StockItem;
+use Illuminate\Http\Request;
 
 class StockItemController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         return StockItem::where('IsArchived', false)->get();
@@ -20,55 +17,34 @@ class StockItemController extends Controller
         return StockItem::where('IsArchived', true)->get();
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        // Validate the incoming request
-        $validated = $request->validate([
-            'ItemName' => 'required|string|max:255',
-            'Description' => 'nullable|string',
-            'Quantity' => 'required|integer|min:0',
-            'UnitPrice' => 'required|numeric|min:0',
-            'Supplier' => 'nullable|string|max:255',
-            'ReorderLevel' => 'required|integer|min:0',
-        ]);
-
-        // Set default IsArchived to false
-        $validated['IsArchived'] = false;
-
-        // Create the StockItem
-        $stockItem = StockItem::create($validated);
-
-        // Return response
-        return response()->json([
-            'message' => 'Stock item created successfully',
-            'data' => $stockItem
-        ], 201);
+        return StockItem::create($request->all());
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show($id)
     {
-        //
+        return StockItem::findOrFail($id);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(Request $request, $id)
     {
-        //
+        $item = StockItem::findOrFail($id);
+        $item->update($request->all());
+        return $item;
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy($id)
     {
-        //
+        $item = StockItem::findOrFail($id);
+        $item->update(['IsArchived' => true]);
+        return response()->json(['message' => 'Item archived']);
+    }
+
+    public function restore($id)
+    {
+        $item = StockItem::findOrFail($id);
+        $item->update(['IsArchived' => false]);
+        return response()->json(['message' => 'Item restored']);
     }
 }

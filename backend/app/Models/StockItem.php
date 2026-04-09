@@ -2,11 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class StockItem extends Model
 {
-    protected $table = 'stock_items'; // optional (Laravel can infer this)
+    use HasFactory;
 
     protected $primaryKey = 'StockItemID';
 
@@ -21,14 +22,6 @@ class StockItem extends Model
     ];
 
     protected $casts = [
-        'Quantity' => 'integer',
-        'UnitPrice' => 'decimal:2',
-        'ReorderLevel' => 'integer',
         'IsArchived' => 'boolean',
-    ];
-
-    // Optional: default values
-    protected $attributes = [
-        'IsArchived' => false,
     ];
 }

@@ -7,6 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 class Customer extends Model
 {
     protected $primaryKey = 'CustomerID';
+
+    public $incrementing = true;
+    protected $keyType = 'int';
+
     protected $fillable = [
         'FirstName',
         'LastName',

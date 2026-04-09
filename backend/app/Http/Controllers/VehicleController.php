@@ -12,7 +12,16 @@ class VehicleController extends Controller
      */
     public function index()
     {
-        return Vehicle::with('customer')->get();
+        return Vehicle::with('customer')
+        ->where('IsArchived', 0)
+        ->get();
+    }
+
+    public function archived()
+    {
+        return Vehicle::with('customer')
+            ->where('IsArchived', 1)
+            ->get();
     }
 
     /**
@@ -29,10 +38,10 @@ class VehicleController extends Controller
 
     $vehicle = Vehicle::create($data);
 
-    // Optionally load customer relationship for frontend
+    // ✅ LOAD RELATION
     $vehicle->load('customer');
 
-    return $vehicle; // Laravel will automatically return JSON
+    return response()->json($vehicle);
     }
 
     /**
@@ -48,7 +57,18 @@ class VehicleController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $vehicle = Vehicle::findOrFail($id);
+
+        $data = $request->validate([
+            'Manufacturer' => 'required|string|max:255',
+            'Model' => 'required|string|max:255',
+            'Year' => 'required|integer',
+            'CustomerID' => 'required|exists:customers,CustomerID',
+        ]);
+
+        $vehicle->update($data);
+
+        return response()->json($vehicle);
     }
 
     /**
@@ -56,6 +76,17 @@ class VehicleController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $vehicle = Vehicle::findOrFail($id);
+        $vehicle->update(['IsArchived' => 1]);
+
+        return response()->json(['message' => 'Archived']);
+    }
+
+    public function restore($id)
+    {
+        $vehicle = Vehicle::findOrFail($id);
+        $vehicle->update(['IsArchived' => 0]);
+
+        return response()->json(['message' => 'Restored']);
     }
 }

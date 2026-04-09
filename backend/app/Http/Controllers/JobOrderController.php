@@ -15,20 +15,7 @@ class JobOrderController extends Controller
     // ✅ GET ALL
     public function index()
     {
-        $jobOrders = JobOrder::where('IsArchived', false)
-            ->with(['vehicle.customer'])
-            ->get();
-
-        return response()->json($jobOrders);
-    }
-
-    public function archived()
-    {
-        $jobOrders = JobOrder::where('IsArchived', true)
-            ->with(['vehicle.customer'])
-            ->get();
-
-        return response()->json($jobOrders);
+        return JobOrder::with('vehicle.customer')->get();
     }
 
     // ✅ GET SINGLE
@@ -90,51 +77,41 @@ class JobOrderController extends Controller
     // ✅ SOFT DELETE (archive)
     public function destroy($id)
     {
-        $jobOrder = JobOrder::find($id);
 
-        if (!$jobOrder) {
-            return response()->json(['message' => 'Job Order not found'], 404);
+    }
+
+
+
+
+       public function addItem(Request $request, JobOrder $jobOrder)
+{
+    $request->validate([
+        'StockItemID' => 'required|exists:stock_items,StockItemID',
+        'Quantity' => 'required|integer|min:1',
+    ]);
+
+    return DB::transaction(function () use ($request, $jobOrder) {
+        $stock = StockItem::findOrFail($request->StockItemID);
+
+        if ($stock->Quantity < $request->Quantity) {
+            return response()->json(['message' => 'Not enough stock'], 400);
         }
 
-        $jobOrder->update(['IsArchived' => true]);
-
-        return response()->json([
-            'message' => 'Job Order archived successfully'
-        ]);
-    }
-
-
-
-
-
-
-        public function addItem(Request $request, JobOrder $jobOrder)
-    {
-        $request->validate([
-            'StockItemID' => 'required|exists:stock_items,StockItemID',
-            'Quantity' => 'required|integer|min:1',
+        $item = JobOrderItem::create([
+            'JobOrderID' => $jobOrder->JobOrderID,
+            'StockItemID' => $request->StockItemID,
+            'Quantity' => $request->Quantity,
+            'UnitPrice' => $stock->UnitPrice
         ]);
 
-        return DB::transaction(function () use ($request, $jobOrder) {
-            $stock = StockItem::findOrFail($request->StockItemID);
+        // 🔥 THIS IS THE FIX
+        $item->load('stockItem');
 
-            if ($stock->Quantity < $request->Quantity) {
-                return response()->json(['message' => 'Not enough stock'], 400);
-            }
+        $stock->decrement('Quantity', $request->Quantity);
 
-            $item = JobOrderItem::create([
-                'JobOrderID' => $jobOrder->JobOrderID,
-                'StockItemID' => $request->StockItemID,
-                'Quantity' => $request->Quantity,
-                'UnitPrice' => $stock->UnitPrice
-            ]);
-
-            $stock->decrement('Quantity', $request->Quantity);
-
-            return response()->json($item, 201);
-        });
-    }
-
+        return response()->json($item, 201);
+    });
+}
 
 
 
