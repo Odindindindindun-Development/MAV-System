@@ -33,4 +33,9 @@ class JobOrder extends Model
     {
         return $this->hasMany(JobOrderLabor::class, 'JobOrderID', 'JobOrderID');
     }
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class, 'CustomerID', 'CustomerID');
+    }
 }

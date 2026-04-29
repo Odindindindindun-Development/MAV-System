@@ -23,6 +23,7 @@ class Payment extends Model
     // 🔗 Relationships
     public function billing()
     {
-        return $this->belongsTo(Billing::class, 'BillingID', 'BillingID');
+        return $this->belongsTo(Billing::class, 'BillingID', 'BillingID')
+            ->with('jobOrder.customer');
     }
 }

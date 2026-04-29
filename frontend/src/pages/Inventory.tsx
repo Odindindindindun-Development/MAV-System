@@ -33,6 +33,25 @@ const Inventory: React.FC = () => {
     // Notification dropdown
     const [notifOpen, setNotifOpen] = useState(false);
 
+    const [adjustType, setAdjustType] = useState<"add" | "deduct">("add");
+    const [adjustQty, setAdjustQty] = useState("");
+
+    const applyAdjustment = () => {
+    const qty = Number(adjustQty);
+
+    if (!qty || qty <= 0) return;
+
+    setFormData((prev) => ({
+        ...prev,
+        Quantity:
+            adjustType === "add"
+                ? String(Number(prev.Quantity) + qty)
+                : String(Math.max(0, Number(prev.Quantity) - qty)),
+    }));
+
+    setAdjustQty("");
+};
+
     // FETCH ITEMS
     useEffect(() => {
         setLoading(true);
@@ -137,18 +156,19 @@ const Inventory: React.FC = () => {
     };
 
     const resetForm = () => {
-        setFormData({
-            ItemName: "",
-            Description: "",
-            Quantity: "",
-            UnitPrice: "",
-            Supplier: "",
-            ReorderLevel: "",
-        });
-        setShowModal(false);
-        setIsEditing(false);
-        setCurrentItemID(null);
-    };
+    setFormData({
+        ItemName: "",
+        Description: "",
+        Quantity: "",
+        UnitPrice: "",
+        Supplier: "",
+        ReorderLevel: "",
+    });
+    setShowModal(false);
+    setIsEditing(false);
+    setCurrentItemID(null);
+    setAdjustQty(""); // ✅ add this
+};
 
     // 🔔 ITEMS BELOW REORDER LEVEL
     const lowStockItems = items.filter(
@@ -160,7 +180,7 @@ const Inventory: React.FC = () => {
         <div>
             {/* HEADER */}
             <div className="upper-customerinfo-container">
-                <div>
+                <div className="customerinfo-left">
                     <h1>Inventory</h1>
                     <p>Manage stock items and supplies.</p>
                 </div>
@@ -225,7 +245,7 @@ const Inventory: React.FC = () => {
 {showModal && (
   <div className="modal-overlay">
     <div className="modal-content">
-      <h2>{isEditing ? "Edit Item / Add Stock" : "Add Item"}</h2>
+      <h2>{isEditing ? "Edit Item / Adjust Stock" : "Add Item"}</h2>
 
       <form onSubmit={handleSubmit}>
         <div className="form-group">
@@ -251,27 +271,38 @@ const Inventory: React.FC = () => {
           />
         </div>
 
-        <div className="form-group">
-          <label>Add Stock</label>
-          <button
-            type="button"
-            className="add-stock-btn"
-            onClick={() => {
-              const addQty = prompt("Enter quantity to add:");
-              if (addQty && !isNaN(Number(addQty))) {
-                setFormData((prev) => ({
-                  ...prev,
-                  Quantity: String(Number(prev.Quantity) + Number(addQty)),
-                }));
-              }
-            }}
-          >
-            + Add Stock
-          </button>
-          <span style={{ marginLeft: "10px" }}>
-            Current: {formData.Quantity || 0}
-          </span>
-        </div>
+        {isEditing && (
+  <div className="form-group">
+    <label>Adjust Stock</label>
+
+    <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+      <select
+        value={adjustType}
+        onChange={(e) =>
+          setAdjustType(e.target.value as "add" | "deduct")
+        }
+      >
+        <option value="add">Add</option>
+        <option value="deduct">Deduct</option>
+      </select>
+
+      <input
+        type="number"
+        placeholder="Quantity"
+        value={adjustQty}
+        onChange={(e) => setAdjustQty(e.target.value)}
+      />
+
+      <button type="button" onClick={applyAdjustment}>
+        Apply
+      </button>
+    </div>
+
+    <span style={{ marginLeft: "10px" }}>
+      Current: {formData.Quantity || 0}
+    </span>
+  </div>
+)}
 
         <div className="form-group">
           <label htmlFor="UnitPrice">Unit Price</label>
@@ -323,6 +354,7 @@ const Inventory: React.FC = () => {
 
             {/* TABLE */}
             {!loading && (
+                <div className="table-container">
                 <table className="custom-table">
                     <thead>
                         <tr>
@@ -375,6 +407,7 @@ const Inventory: React.FC = () => {
                         ))}
                     </tbody>
                 </table>
+                </div>
             )}
         </div>
     );

@@ -208,33 +208,35 @@ const JobOrderDetails: React.FC = () => {
                 <td>{item.Quantity}</td>
                 <td>{item.UnitPrice}</td>
                 <td>{item.Quantity * item.UnitPrice}</td>
-                <td>
-  <button
-    className="remove-btn"
-    onClick={async () => {
-      try {
-        await axios.delete(
-          `http://localhost:8000/api/job-orders/items/${item.JobOrderItemID}`
-        );
+                {!billingGenerated && (
+  <td>
+    <button
+      className="remove-btn"
+      onClick={async () => {
+        try {
+          await axios.delete(
+            `http://localhost:8000/api/job-orders/items/${item.JobOrderItemID}`
+          );
 
-        setJobOrder(prev =>
-          prev
-            ? {
-                ...prev,
-                items: prev.items!.filter(
-                  i => i.JobOrderItemID !== item.JobOrderItemID
-                ),
-              }
-            : prev
-        );
-      } catch {
-        alert("Failed to remove item");
-      }
-    }}
-  >
-    Remove
-  </button>
-</td>
+          setJobOrder(prev =>
+            prev
+              ? {
+                  ...prev,
+                  items: prev.items!.filter(
+                    i => i.JobOrderItemID !== item.JobOrderItemID
+                  ),
+                }
+              : prev
+          );
+        } catch {
+          alert("Failed to remove item");
+        }
+      }}
+    >
+      Remove
+    </button>
+  </td>
+)}
               </tr>
             ))}
 

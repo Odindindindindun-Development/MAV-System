@@ -2,48 +2,58 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Expense;
+use Illuminate\Http\Request;
 
 class ExpenseController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        return Expense::orderBy('ExpenseDate', 'desc')->get();
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+    public function show($id)
+    {
+        return Expense::findOrFail($id);
+    }
+
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'Category'    => 'required|string|max:100',
+            'Amount'      => 'required|numeric|min:0.01',
+            'ExpenseDate' => 'required|date',
+            'Description' => 'nullable|string|max:500',
+        ]);
+
+        $expense = Expense::create($request->only([
+            'Category', 'Amount', 'ExpenseDate', 'Description',
+        ]));
+
+        return response()->json($expense, 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function update(Request $request, $id)
     {
-        //
+        $expense = Expense::findOrFail($id);
+
+        $request->validate([
+            'Category'    => 'sometimes|required|string|max:100',
+            'Amount'      => 'sometimes|required|numeric|min:0.01',
+            'ExpenseDate' => 'sometimes|required|date',
+            'Description' => 'nullable|string|max:500',
+        ]);
+
+        $expense->update($request->only([
+            'Category', 'Amount', 'ExpenseDate', 'Description',
+        ]));
+
+        return response()->json($expense);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function destroy($id)
     {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        Expense::findOrFail($id)->delete();
+        return response()->json(['message' => 'Expense deleted']);
     }
 }
