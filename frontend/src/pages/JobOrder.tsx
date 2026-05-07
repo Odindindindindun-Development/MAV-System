@@ -84,30 +84,54 @@ const JobOrder: React.FC = () => {
     }, [searchText, vehicles]);
 
     // SUBMIT
-    const handleSubmit = (e: any) => {
-        e.preventDefault();
+const handleSubmit = (e: any) => {
+    e.preventDefault();
 
-        axios.post("http://127.0.0.1:8000/api/job-orders", {
-            DateCreated: formData.DateCreated,
-            Status: formData.Status,
-            VehicleID: Number(formData.VehicleID),
-        })
-        .then(res => {
-            setJobOrders(prev => [...prev, res.data.data]);
-            setShowModal(false);
-            setFormData({
-                DateCreated: "",
-                Status: "",
-                VehicleID: "",
-            });
-            setSearchText("");
-            setCurrentPage(1); // reset page
-        })
-        .catch(err => {
-            console.error(err);
-            alert("Failed to create job order");
+    const selectedDate = new Date(formData.DateCreated);
+    const today = new Date();
+
+    selectedDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+
+    // ❌ future date check
+    if (selectedDate > today) {
+        alert("Date cannot be in the future.");
+        return;
+    }
+
+    // ❌ unrealistic old date check (adjust year if you want)
+    const year = selectedDate.getFullYear();
+    if (year < 2000) {
+        alert("Date is too far in the past. Please enter a realistic date (2000 onwards).");
+        return;
+    }
+
+    if (!formData.DateCreated) {
+        alert("Please select a valid date.");
+        return;
+    }
+
+    axios.post("http://127.0.0.1:8000/api/job-orders", {
+        DateCreated: formData.DateCreated,
+        Status: formData.Status,
+        VehicleID: Number(formData.VehicleID),
+    })
+    .then(res => {
+        setJobOrders(prev => [...prev, res.data.data]);
+        setShowModal(false);
+        setFormData({
+            DateCreated: "",
+            Status: "",
+            VehicleID: "",
         });
-    };
+        setSearchText("");
+        setCurrentPage(1);
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Failed to create job order");
+    });
+};
 
     const handleManage = (id: number) => {
         navigate(`/joborder/${id}`);
@@ -168,7 +192,7 @@ const JobOrder: React.FC = () => {
                             </div>
 
                             <div className="form-group">
-                                <label>Vehicle / Customer</label>
+                                <label>Customer</label>
                                 <input
                                     type="text"
                                     placeholder="Type Vehicle ID or Customer..."

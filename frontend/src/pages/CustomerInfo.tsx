@@ -31,6 +31,10 @@ const CustomerInfo: React.FC = () => {
         IsArchived: 0,
     });
 
+    // ✅ PAGINATION STATE
+    const [currentPage, setCurrentPage] = useState(1);
+    const rowsPerPage = 10;
+
     // FETCH
     useEffect(() => {
         setLoading(true);
@@ -48,6 +52,11 @@ const CustomerInfo: React.FC = () => {
             .catch(() => setLoading(false));
     }, [activeTab]);
 
+    // RESET PAGE WHEN TAB CHANGES
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [activeTab]);
+
     const handleChange = (e: any) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -63,47 +72,125 @@ const CustomerInfo: React.FC = () => {
 
     // ARCHIVE
     const handleArchive = (id: number) => {
-        axios.delete(`http://127.0.0.1:8000/api/customers/${id}`)
-            .then(() => {
-                setCustomers(prev =>
-                    prev.filter(c => c.CustomerID !== id)
-                );
-            });
-    };
+    const confirmDelete = window.confirm("Are you sure you want to archive this customer?");
+
+    if (!confirmDelete) return;
+
+    axios.delete(`http://127.0.0.1:8000/api/customers/${id}`)
+        .then(() => {
+            setCustomers(prev =>
+                prev.filter(c => c.CustomerID !== id)
+            );
+            alert("Customer archived successfully.");
+        })
+        .catch(() => {
+            alert("Failed to archive customer.");
+        });
+};
 
     // RESTORE
     const handleRestore = (id: number) => {
-        axios.patch(`http://127.0.0.1:8000/api/customers/${id}/restore`)
-            .then(() => {
-                setCustomers(prev => prev.filter(c => c.CustomerID !== id));
-            });
-    };
+    const confirmRestore = window.confirm("Do you want to restore this customer?");
+
+    if (!confirmRestore) return;
+
+    axios.patch(`http://127.0.0.1:8000/api/customers/${id}/restore`)
+        .then(() => {
+            setCustomers(prev =>
+                prev.filter(c => c.CustomerID !== id)
+            );
+            alert("Customer restored successfully.");
+        })
+        .catch(() => {
+            alert("Failed to restore customer.");
+        });
+};
 
     // SUBMIT
-    const handleSubmit = (e: any) => {
-        e.preventDefault();
+const handleSubmit = (e: any) => {
+    e.preventDefault();
 
-        if (isEditing && currentCustomerID) {
-            axios.put(`http://127.0.0.1:8000/api/customers/${currentCustomerID}`, formData)
-                .then(res => {
-                    setCustomers(prev =>
-                        prev.map(c =>
-                            c.CustomerID === currentCustomerID ? res.data : c
-                        )
-                    );
-                    setShowModal(false);
-                });
-        } else {
-            axios.post("http://127.0.0.1:8000/api/customers", formData)
-                .then(res => {
-                    setCustomers(prev => [...prev, res.data]);
-                    setShowModal(false);
-                });
-        }
-    };
+    const contact = formData.Contact;
+
+    // 🔥 duplicates (ignore current record when editing)
+    const fullNameExists = customers.some(c =>
+    c.CustomerID !== currentCustomerID &&
+    (c.FirstName ?? "").toLowerCase().trim() === formData.FirstName.toLowerCase().trim() &&
+    (c.LastName ?? "").toLowerCase().trim() === formData.LastName.toLowerCase().trim()
+);
+
+const emailExists = customers.some(c =>
+    c.CustomerID !== currentCustomerID &&
+    (c.Email ?? "").toLowerCase().trim() === formData.Email.toLowerCase().trim()
+);
+
+const contactExists = customers.some(c =>
+    c.CustomerID !== currentCustomerID &&
+    (c.Contact ?? "") === formData.Contact
+);
+
+    // 🔥 CONTACT VALIDATION
+    if (!/^[0-9]+$/.test(contact)) {
+        alert("Contact number must contain digits only.");
+        return;
+    }
+
+    if (contact.length !== 11) {
+        alert("Contact number must be exactly 11 digits.");
+        return;
+    }
+
+    // 🔥 EMAIL VALIDATION (fixes '@' only issue)
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.Email)) {
+        alert("Please enter a valid email address (e.g. name@gmail.com).");
+        return;
+    }
+
+    // 🔥 DUPLICATE CHECKS (ADD + EDIT SAFE)
+    if (fullNameExists) {
+        alert("A customer with this name already exists.");
+        return;
+    }
+
+    if (emailExists) {
+        alert("This email is already registered.");
+        return;
+    }
+
+    if (contactExists) {
+        alert("This contact number is already registered.");
+        return;
+    }
+
+    // API REQUEST
+    if (isEditing && currentCustomerID) {
+        axios.put(`http://127.0.0.1:8000/api/customers/${currentCustomerID}`, formData)
+            .then(res => {
+                setCustomers(prev =>
+                    prev.map(c =>
+                        c.CustomerID === currentCustomerID ? res.data : c
+                    )
+                );
+                setShowModal(false);
+            });
+    } else {
+        axios.post("http://127.0.0.1:8000/api/customers", formData)
+            .then(res => {
+                setCustomers(prev => [...prev, res.data]);
+                setShowModal(false);
+            });
+    }
+};
+
+    // ✅ PAGINATION LOGIC
+    const indexOfLastRow = currentPage * rowsPerPage;
+    const indexOfFirstRow = indexOfLastRow - rowsPerPage;
+    const currentCustomers = customers.slice(indexOfFirstRow, indexOfLastRow);
+    const totalPages = Math.ceil(customers.length / rowsPerPage);
 
     return (
         <div>
+
             {/* HEADER */}
             <div className="upper-customerinfo-container">
                 <div className="customerinfo-left">
@@ -158,17 +245,24 @@ const CustomerInfo: React.FC = () => {
 
                             <div className="form-group">
                                 <label>Contact</label>
-                                <input name="Contact" value={formData.Contact} onChange={handleChange} />
+                                <input
+                                    name="Contact"
+                                    value={formData.Contact}
+                                    onChange={handleChange}
+                                    maxLength={11}
+                                    inputMode="numeric"
+                                    required
+                                />
                             </div>
 
                             <div className="form-group">
                                 <label>Email</label>
-                                <input name="Email" value={formData.Email} onChange={handleChange} />
+                                <input name="Email" value={formData.Email} onChange={handleChange} required />
                             </div>
 
                             <div className="form-group">
                                 <label>Address</label>
-                                <input name="Address" value={formData.Address} onChange={handleChange} />
+                                <input name="Address" value={formData.Address} onChange={handleChange} required />
                             </div>
 
                             <div className="modal-buttons">
@@ -205,7 +299,7 @@ const CustomerInfo: React.FC = () => {
                         </thead>
 
                         <tbody>
-                            {customers.map(c => (
+                            {currentCustomers.map(c => (
                                 <tr key={c.CustomerID}>
                                     <td>{c.CustomerID}</td>
                                     <td>{c.FirstName} {c.LastName}</td>
@@ -239,6 +333,31 @@ const CustomerInfo: React.FC = () => {
                             ))}
                         </tbody>
                     </table>
+
+                    {/* PAGINATION */}
+                    <div className="pagination">
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        >
+                            Prev
+                        </button>
+
+                        {[...Array(totalPages)].map((_, i) => (
+                            <button
+                                key={i}
+                                className={currentPage === i + 1 ? "active-page" : ""}
+                                onClick={() => setCurrentPage(i + 1)}
+                            >
+                                {i + 1}
+                            </button>
+                        ))}
+
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                        >
+                            Next
+                        </button>
+                    </div>
                 </div>
             )}
         </div>

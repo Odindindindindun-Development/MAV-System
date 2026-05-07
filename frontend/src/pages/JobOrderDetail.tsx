@@ -370,20 +370,41 @@ const JobOrderDetails: React.FC = () => {
         className="generate-btn"
         disabled={billingGenerated}
         onClick={async () => {
-          try {
-            await axios.post(
-              `http://localhost:8000/api/job-orders/${jobOrder.JobOrderID}/generate-billing`
-            );
+  const hasItems = jobOrder.items && jobOrder.items.length > 0;
+  const hasLabors = jobOrder.labors && jobOrder.labors.length > 0;
 
-            alert("Billing generated successfully!");
-            // Refetch to get updated status
-            const res = await axios.get<JobOrder>(`http://localhost:8000/api/job-orders/${id}`);
-            setJobOrder(res.data);
+  // ❌ BLOCK IF EMPTY
+  if (!hasItems && !hasLabors) {
+    alert("Cannot generate billing. Please add at least one item or labor.");
+    return;
+  }
 
-          } catch (err: any) {
-            alert(err.response?.data?.message || "Failed to generate billing");
-          }
-        }}
+  if (!hasItems) {
+    alert("Cannot generate billing. No items added.");
+    return;
+  }
+
+  if (!hasLabors) {
+    alert("Cannot generate billing. No labor added.");
+    return;
+  }
+
+  try {
+    await axios.post(
+      `http://localhost:8000/api/job-orders/${jobOrder.JobOrderID}/generate-billing`
+    );
+
+    alert("Billing generated successfully!");
+
+    const res = await axios.get<JobOrder>(
+      `http://localhost:8000/api/job-orders/${id}`
+    );
+
+    setJobOrder(res.data);
+  } catch (err: any) {
+    alert(err.response?.data?.message || "Failed to generate billing");
+  }
+}}
       >
         {billingGenerated ? "Billing Generated" : "Generate Billing"}
       </button>

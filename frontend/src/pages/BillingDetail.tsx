@@ -132,29 +132,48 @@ const BillingDetail: React.FC = () => {
     }
   };
 
-  const handleAddPayment = async () => {
-    if (paymentAmount <= 0) return alert("Enter a valid payment amount");
+const handleAddPayment = async () => {
+  if (paymentAmount <= 0) return alert("Enter a valid payment amount");
 
-    try {
-      const res = await axios.post("http://localhost:8000/api/payments", {
-        BillingID: billing.BillingID,
-        Amount: paymentAmount,
-        PaymentDate: paymentDate,
-        PaymentMethod: paymentMethod,
-      });
+  const selectedDate = new Date(paymentDate);
+  const today = new Date();
 
-      const { payment: newPayment, billing: updatedBilling } = res.data;
-      setPayments((prev) => [...prev, newPayment]);
-      setBilling(updatedBilling); // update grand total, balance, and status
-      setPaymentAmount(0);
-      setPaymentMethod("Cash");
-      setPaymentDate(new Date().toISOString().slice(0, 10));
-    } catch (err: any) {
-      console.error(err.response?.data || err.message);
-      alert("Payment failed");
-    }
-  };
+  // reset time so comparison is clean
+  today.setHours(0, 0, 0, 0);
+  selectedDate.setHours(0, 0, 0, 0);
 
+  const minDate = new Date("2000-01-01");
+
+  // ❌ FUTURE DATE CHECK
+  if (selectedDate > today) {
+    return alert("Payment date cannot be in the future.");
+  }
+
+  // ❌ TOO OLD DATE CHECK
+  if (selectedDate < minDate) {
+    return alert("Payment date is too old. Please enter a realistic date.");
+  }
+
+  try {
+    const res = await axios.post("http://localhost:8000/api/payments", {
+      BillingID: billing.BillingID,
+      Amount: paymentAmount,
+      PaymentDate: paymentDate,
+      PaymentMethod: paymentMethod,
+    });
+
+    const { payment: newPayment, billing: updatedBilling } = res.data;
+    setPayments((prev) => [...prev, newPayment]);
+    setBilling(updatedBilling);
+
+    setPaymentAmount(0);
+    setPaymentMethod("Cash");
+    setPaymentDate(new Date().toISOString().slice(0, 10));
+  } catch (err: any) {
+    console.error(err.response?.data || err.message);
+    alert("Payment failed");
+  }
+};
   return (
     <div className="billing-container">
       <h1>Invoice</h1>

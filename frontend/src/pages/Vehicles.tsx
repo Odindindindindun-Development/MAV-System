@@ -38,6 +38,10 @@ const Vehicles: React.FC = () => {
     CustomerID: "",
   });
 
+  // PAGINATION
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 10;
+
   // FETCH
   useEffect(() => {
     setLoading(true);
@@ -58,16 +62,18 @@ const Vehicles: React.FC = () => {
       .then(res => setCustomers(res.data));
   }, [activeTab]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab]);
+
   const handleChange = (e: any) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // 🔥 IMPORTANT: sync input → CustomerID
   const handleCustomerSearch = (value: string) => {
     setSearchCustomerText(value);
 
-    // Try match by ID OR name
     const matched = customers.find(c => {
       const fullName = `${c.FirstName} ${c.LastName}`.toLowerCase();
       return (
@@ -89,7 +95,6 @@ const Vehicles: React.FC = () => {
     }
   };
 
-  // EDIT
   const handleEdit = (v: Vehicle) => {
     setFormData({
       Manufacturer: v.Manufacturer,
@@ -109,28 +114,88 @@ const Vehicles: React.FC = () => {
     setShowModal(true);
   };
 
-  // ARCHIVE
-  const handleArchive = (id: number) => {
+ const handleArchive = (id: number) => {
+    const confirmDelete = window.confirm("Are you sure you want to archive this vehicle?");
+
+    if (!confirmDelete) return;
+
     axios.delete(`http://127.0.0.1:8000/api/vehicles/${id}`)
-      .then(() => {
-        setVehicles(prev => prev.filter(v => v.VehicleID !== id));
-      });
-  };
+        .then(() => {
+            setVehicles(prev => prev.filter(v => v.VehicleID !== id));
+            alert("Vehicle archived successfully.");
+        })
+        .catch(() => {
+            alert("Failed to archive vehicle.");
+        });
+};
 
-  // RESTORE
-  const handleRestore = (id: number) => {
+const handleRestore = (id: number) => {
+    const confirmRestore = window.confirm("Do you want to restore this vehicle?");
+
+    if (!confirmRestore) return;
+
     axios.patch(`http://127.0.0.1:8000/api/vehicles/${id}/restore`)
-      .then(() => {
-        setVehicles(prev => prev.filter(v => v.VehicleID !== id));
-      });
+        .then(() => {
+            setVehicles(prev => prev.filter(v => v.VehicleID !== id));
+            alert("Vehicle restored successfully.");
+        })
+        .catch(() => {
+            alert("Failed to restore vehicle.");
+        });
+};
+
+  const resetForm = () => {
+    setFormData({
+      Manufacturer: "",
+      Model: "",
+      Year: "",
+      CustomerID: "",
+    });
+    setSearchCustomerText("");
+    setIsEditing(false);
+    setCurrentVehicleID(null);
   };
 
-  // SUBMIT
+  // =========================
+  // SUBMIT (WITH YEAR VALIDATION)
+  // =========================
   const handleSubmit = (e: any) => {
     e.preventDefault();
 
     if (!formData.CustomerID) {
       alert("Please select a valid customer");
+      return;
+    }
+
+    const duplicateVehicle = vehicles.some(v =>
+      v.VehicleID !== currentVehicleID &&
+      v.Manufacturer.toLowerCase().trim() === formData.Manufacturer.toLowerCase().trim() &&
+      v.Model.toLowerCase().trim() === formData.Model.toLowerCase().trim() &&
+      String(v.Year) === String(formData.Year) &&
+      String(v.CustomerID) === String(formData.CustomerID)
+    );
+
+    if (duplicateVehicle) {
+      alert("Already have an existing record.");
+      return;
+    }
+
+    // 🔥 YEAR VALIDATION
+    const year = Number(formData.Year);
+    const currentYear = new Date().getFullYear();
+
+    if (!year || isNaN(year)) {
+      alert("Please enter a valid year.");
+      return;
+    }
+
+    if (year < 1900) {
+      alert("Year is not valid. Please enter a realistic vehicle year (1900 and above).");
+      return;
+    }
+
+    if (year > currentYear) {
+      alert(`Year cannot be greater than ${currentYear}.`);
       return;
     }
 
@@ -155,27 +220,22 @@ const Vehicles: React.FC = () => {
     }
   };
 
-  const resetForm = () => {
-    setFormData({
-      Manufacturer: "",
-      Model: "",
-      Year: "",
-      CustomerID: "",
-    });
-    setSearchCustomerText("");
-    setIsEditing(false);
-    setCurrentVehicleID(null);
-  };
-
-  // FILTER suggestions
   const filteredCustomers = customers.filter(c => {
     const name = `${c.FirstName} ${c.LastName}`;
-    return name.toLowerCase().includes(searchCustomerText.toLowerCase()) ||
-      String(c.CustomerID).includes(searchCustomerText);
+    return (
+      name.toLowerCase().includes(searchCustomerText.toLowerCase()) ||
+      String(c.CustomerID).includes(searchCustomerText)
+    );
   });
+
+  const indexOfLastRow = currentPage * rowsPerPage;
+  const indexOfFirstRow = indexOfLastRow - rowsPerPage;
+  const currentVehicles = vehicles.slice(indexOfFirstRow, indexOfLastRow);
+  const totalPages = Math.ceil(vehicles.length / rowsPerPage);
 
   return (
     <div>
+
       {/* HEADER */}
       <div className="upper-customerinfo-container">
         <div className="customerinfo-left">
@@ -184,11 +244,17 @@ const Vehicles: React.FC = () => {
         </div>
 
         <div className="tabs-container">
-          <button className={activeTab === "active" ? "tab active" : "tab"} onClick={() => setActiveTab("active")}>
+          <button
+            className={activeTab === "active" ? "tab active" : "tab"}
+            onClick={() => setActiveTab("active")}
+          >
             Active
           </button>
 
-          <button className={activeTab === "archived" ? "tab active" : "tab"} onClick={() => setActiveTab("archived")}>
+          <button
+            className={activeTab === "archived" ? "tab active" : "tab"}
+            onClick={() => setActiveTab("archived")}
+          >
             Archived
           </button>
 
@@ -198,6 +264,7 @@ const Vehicles: React.FC = () => {
             onClick={() => {
               setShowModal(true);
               setIsEditing(false);
+               resetForm();
             }}
           >
             + Add Vehicle
@@ -227,25 +294,27 @@ const Vehicles: React.FC = () => {
                 <input type="number" name="Year" value={formData.Year} onChange={handleChange} required />
               </div>
 
-              {/* ✅ SEARCHABLE INPUT (FIXED) */}
               <div className="form-group">
                 <label>Customer</label>
                 <input
                   value={searchCustomerText}
                   onChange={(e) => handleCustomerSearch(e.target.value)}
                   list="customers"
-                  placeholder="Type ID or Name..."
                   required
                 />
+
                 <datalist id="customers">
                   {filteredCustomers.map(c => (
-                    <option key={c.CustomerID} value={`${c.FirstName} ${c.LastName}`} />
+                    <option
+                      key={c.CustomerID}
+                      value={`${c.FirstName} ${c.LastName}`}
+                    />
                   ))}
                 </datalist>
               </div>
 
               <div className="modal-buttons">
-                <button className="submit-btn" type="submit">
+                <button type="submit" className="submit-btn">
                   {isEditing ? "Update" : "Submit"}
                 </button>
 
@@ -275,19 +344,17 @@ const Vehicles: React.FC = () => {
             </thead>
 
             <tbody>
-              {vehicles.map(v => (
+              {currentVehicles.map(v => (
                 <tr key={v.VehicleID}>
                   <td>{v.VehicleID}</td>
                   <td>{v.Manufacturer}</td>
                   <td>{v.Model}</td>
                   <td>{v.Year}</td>
-
                   <td>
                     {v.customer
                       ? `${v.customer.FirstName} ${v.customer.LastName}`
                       : v.CustomerID}
                   </td>
-
                   <td>
                     <span className={v.IsArchived ? "status archived" : "status active"}>
                       {v.IsArchived ? "Archived" : "Active"}
@@ -315,6 +382,28 @@ const Vehicles: React.FC = () => {
               ))}
             </tbody>
           </table>
+
+          {/* PAGINATION */}
+          <div className="pagination">
+            <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}>
+              Prev
+            </button>
+
+            {[...Array(totalPages)].map((_, i) => (
+              <button
+                key={i}
+                className={currentPage === i + 1 ? "active-page" : ""}
+                onClick={() => setCurrentPage(i + 1)}
+              >
+                {i + 1}
+              </button>
+            ))}
+
+            <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}>
+              Next
+            </button>
+          </div>
+
         </div>
       )}
     </div>
