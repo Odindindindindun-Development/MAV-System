@@ -74,22 +74,68 @@ const FinancialRecords: React.FC = () => {
     setExpenseForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleExpenseSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setError(null);
-    setSuccess(null);
-    try {
-      await axios.post("http://localhost:8000/api/expenses", expenseForm);
-      setSuccess("Expense recorded successfully.");
-      setExpenseForm({ Category: "", Amount: "", ExpenseDate: "", Description: "" });
-      fetchAll();
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to save expense.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
+const handleExpenseSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  setSubmitting(true);
+  setError(null);
+  setSuccess(null);
+
+  const today = new Date();
+  const selectedDate = new Date(expenseForm.ExpenseDate);
+
+  today.setHours(0, 0, 0, 0);
+  selectedDate.setHours(0, 0, 0, 0);
+
+  const minDate = new Date("2000-01-01");
+
+  // ❌ EMPTY DESCRIPTION
+  if (!expenseForm.Description || expenseForm.Description.trim() === "") {
+    alert("Description cannot be empty.");
+    setSubmitting(false);
+    return;
+  }
+
+  // ❌ INVALID AMOUNT
+  if (!expenseForm.Amount || Number(expenseForm.Amount) <= 0) {
+    alert("Amount must be greater than 0.");
+    setSubmitting(false);
+    return;
+  }
+
+  // ❌ FUTURE DATE
+  if (selectedDate > today) {
+    alert("Expense date cannot be in the future.");
+    setSubmitting(false);
+    return;
+  }
+
+  // ❌ TOO OLD DATE
+  if (selectedDate < minDate) {
+    alert("Expense date is too old. Please enter a realistic date.");
+    setSubmitting(false);
+    return;
+  }
+
+  try {
+    await axios.post("http://localhost:8000/api/expenses", expenseForm);
+
+    setSuccess("Expense recorded successfully.");
+
+    setExpenseForm({
+      Category: "",
+      Amount: "",
+      ExpenseDate: "",
+      Description: "",
+    });
+
+    fetchAll();
+  } catch (err: any) {
+    setError(err.response?.data?.message || "Failed to save expense.");
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   const handleDeleteExpense = async (id: number) => {
     if (!window.confirm("Delete this expense?")) return;
