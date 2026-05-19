@@ -2,6 +2,8 @@ import React from "react";
 import { NavLink } from "react-router-dom";
 import "../style/dashboard.css"
 import logo from '../assets/logo.png';
+import { useNavigate } from "react-router-dom";
+import { logout } from "../utils/auth";
 
 
 const Sidebar = () => {
@@ -14,8 +16,16 @@ const Sidebar = () => {
     { name: "Financial Records", path: "/financial-records" },
   ];
 
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
   return (
     <aside className="sidebar">
+
       <div className="logo-container">
         <img src={logo} alt="logo" className="logo" />
         <p> Davao MAV Auto Corporation</p>
@@ -36,6 +46,9 @@ const Sidebar = () => {
           </NavLink>
         ))}
       </nav>
+      <button onClick={handleLogout} className="logout-btn">
+        Logout
+      </button>
     </aside>
   );
 };

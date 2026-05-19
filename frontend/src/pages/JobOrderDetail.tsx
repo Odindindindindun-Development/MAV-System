@@ -170,7 +170,14 @@ const JobOrderDetails: React.FC = () => {
       <div className="joborder-card">
         <p><strong>ID:</strong> {jobOrder.JobOrderID}</p>
         <p><strong>Status:</strong> {jobOrder.Status}</p>
-        <p><strong>Date:</strong> {jobOrder.DateCreated}</p>
+        <p>
+          <strong>Date:</strong>{" "}
+          {new Date(jobOrder.DateCreated).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}
+        </p>
         <p><strong>Vehicle ID:</strong> {jobOrder.VehicleID}</p>
 
         {jobOrder.vehicle?.customer && (
@@ -209,34 +216,34 @@ const JobOrderDetails: React.FC = () => {
                 <td>{item.UnitPrice}</td>
                 <td>{item.Quantity * item.UnitPrice}</td>
                 {!billingGenerated && (
-  <td>
-    <button
-      className="remove-btn"
-      onClick={async () => {
-        try {
-          await axios.delete(
-            `http://localhost:8000/api/job-orders/items/${item.JobOrderItemID}`
-          );
+                  <td>
+                    <button
+                      className="remove-btn"
+                      onClick={async () => {
+                        try {
+                          await axios.delete(
+                            `http://localhost:8000/api/job-orders/items/${item.JobOrderItemID}`
+                          );
 
-          setJobOrder(prev =>
-            prev
-              ? {
-                  ...prev,
-                  items: prev.items!.filter(
-                    i => i.JobOrderItemID !== item.JobOrderItemID
-                  ),
-                }
-              : prev
-          );
-        } catch {
-          alert("Failed to remove item");
-        }
-      }}
-    >
-      Remove
-    </button>
-  </td>
-)}
+                          setJobOrder(prev =>
+                            prev
+                              ? {
+                                ...prev,
+                                items: prev.items!.filter(
+                                  i => i.JobOrderItemID !== item.JobOrderItemID
+                                ),
+                              }
+                              : prev
+                          );
+                        } catch {
+                          alert("Failed to remove item");
+                        }
+                      }}
+                    >
+                      Remove
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
 
@@ -288,6 +295,8 @@ const JobOrderDetails: React.FC = () => {
       </div>
 
       <h3>Total Items: {totalItems}</h3>
+      <br />
+      <br />
 
       {/* Labor Form */}
       <div className="joborder-card">
@@ -317,11 +326,11 @@ const JobOrderDetails: React.FC = () => {
                           setJobOrder(prev =>
                             prev
                               ? {
-                                  ...prev,
-                                  labors: prev.labors!.filter(
-                                    l => l.JobOrderLaborID !== labor.JobOrderLaborID
-                                  ),
-                                }
+                                ...prev,
+                                labors: prev.labors!.filter(
+                                  l => l.JobOrderLaborID !== labor.JobOrderLaborID
+                                ),
+                              }
                               : prev
                           );
                         } catch {
@@ -364,47 +373,48 @@ const JobOrderDetails: React.FC = () => {
         </table>
       </div>
       <h3>Total Labor: ${totalLabor}</h3>
+      <br />
       <h2>Grand Total: ${grandTotal}</h2>
 
       <button
         className="generate-btn"
         disabled={billingGenerated}
         onClick={async () => {
-  const hasItems = jobOrder.items && jobOrder.items.length > 0;
-  const hasLabors = jobOrder.labors && jobOrder.labors.length > 0;
+          const hasItems = jobOrder.items && jobOrder.items.length > 0;
+          const hasLabors = jobOrder.labors && jobOrder.labors.length > 0;
 
-  // ❌ BLOCK IF EMPTY
-  if (!hasItems && !hasLabors) {
-    alert("Cannot generate billing. Please add at least one item or labor.");
-    return;
-  }
+          // ❌ BLOCK IF EMPTY
+          if (!hasItems && !hasLabors) {
+            alert("Cannot generate billing. Please add at least one item or labor.");
+            return;
+          }
 
-  if (!hasItems) {
-    alert("Cannot generate billing. No items added.");
-    return;
-  }
+          if (!hasItems) {
+            alert("Cannot generate billing. No items added.");
+            return;
+          }
 
-  if (!hasLabors) {
-    alert("Cannot generate billing. No labor added.");
-    return;
-  }
+          if (!hasLabors) {
+            alert("Cannot generate billing. No labor added.");
+            return;
+          }
 
-  try {
-    await axios.post(
-      `http://localhost:8000/api/job-orders/${jobOrder.JobOrderID}/generate-billing`
-    );
+          try {
+            await axios.post(
+              `http://localhost:8000/api/job-orders/${jobOrder.JobOrderID}/generate-billing`
+            );
 
-    alert("Billing generated successfully!");
+            alert("Billing generated successfully!");
 
-    const res = await axios.get<JobOrder>(
-      `http://localhost:8000/api/job-orders/${id}`
-    );
+            const res = await axios.get<JobOrder>(
+              `http://localhost:8000/api/job-orders/${id}`
+            );
 
-    setJobOrder(res.data);
-  } catch (err: any) {
-    alert(err.response?.data?.message || "Failed to generate billing");
-  }
-}}
+            setJobOrder(res.data);
+          } catch (err: any) {
+            alert(err.response?.data?.message || "Failed to generate billing");
+          }
+        }}
       >
         {billingGenerated ? "Billing Generated" : "Generate Billing"}
       </button>

@@ -7,9 +7,23 @@ use Illuminate\Http\Request;
 
 class ExpenseController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return Expense::orderBy('ExpenseDate', 'desc')->get();
+        $range = $request->query('range', 'all');
+        $startDate = match($range) {
+            '7d'   => \Carbon\Carbon::now()->subDays(7)->startOfDay(),
+            '30d'  => \Carbon\Carbon::now()->subDays(30)->startOfDay(),
+            '365d' => \Carbon\Carbon::now()->subDays(365)->startOfDay(),
+            default => null,
+        };
+
+        $query = Expense::query();
+
+        if ($startDate) {
+            $query->where('ExpenseDate', '>=', $startDate);
+        }
+
+        return response()->json($query->orderBy('ExpenseDate', 'desc')->get());
     }
 
     public function show($id)

@@ -45,3 +45,4 @@ Route::apiResource('stock-items', StockItemController::class);
 
 Route::apiResource('expenses', ExpenseController::class);
 Route::get('financial-records', [FinancialController::class, 'index']);
+Route::get('/financial-records/chart', [FinancialController::class, 'chartData']);

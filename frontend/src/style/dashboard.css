@@ -141,3 +141,35 @@ table {
 .green-text {
   color: #20B15F;
 }
+
+.sidebar {
+  width: 250px;
+  background: #0f172a;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1; /* pushes logout button to bottom */
+}
+
+.logout-btn {
+  margin-top: auto;
+  background-color: #0F172A;
+  border: none;
+  color: #94A3B8;
+}
+
+.logout-btn:hover {
+  margin-top: auto;
+  background-color: #0F172A;
+  border: none;
+  color: white;
+  cursor: pointer;
+}

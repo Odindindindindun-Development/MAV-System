@@ -1,127 +1,227 @@
-/* Keep previous styles, same as before */
-
 .joborder-container {
+  max-width: 1200px;
+  margin: 30px auto;
   padding: 20px;
-  max-width: 800px;
-  margin: 0 auto;
-  font-family: Arial, sans-serif;
+  font-family: "Inter", Arial, sans-serif;
+  color: #1e293b;
 }
 
+/* PAGE TITLE */
+.joborder-container h1 {
+  font-size: 32px;
+  margin-bottom: 25px;
+  color: #0F172A;
+  font-weight: 700;
+}
+
+/* CARDS */
 .joborder-card {
-  background: #f8f8f8;
-  padding: 15px 20px;
-  margin-bottom: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 25px;
+  border: 1px solid #e2e8f0;
+  box-shadow:
+    0 4px 10px rgba(0, 0, 0, 0.04),
+    0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
-.form-row {
-  padding: 10px;
-  display: flex;
-  gap: 10px;
+/* SECTION TITLES */
+.joborder-card h2 {
+  margin-bottom: 18px;
+  font-size: 22px;
+  color: #0F172A;
+  font-weight: 700;
 }
 
-.form-row input,
-.form-row select {
-  padding: 5px 10px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  flex: 1;
+/* INFO TEXT */
+.joborder-card p {
+  margin: 10px 0;
+  font-size: 15px;
+  color: #475569;
 }
 
-.form-row button {
-  padding: 5px 12px;
-  border-radius: 4px;
-  border: none;
-  background-color: #700B97;
-  color: white;
-  cursor: pointer;
+.joborder-card strong {
+  color: #0F172A;
 }
 
-.form-row button:hover {
-  background-color: #8E05C2;
-}
-
-ul.list {
-  padding-left: 20px;
-}
-
-.remove-button {
-  margin-left: 10px;
-  padding: 2px 8px;
-  background-color: #c0392b;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.remove-button:hover {
-  background-color: #e74c3c;
-}
-
+/* TABLE */
 .item-table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 10px;
+  overflow: hidden;
+  border-radius: 12px;
 }
 
-.item-table th,
-.item-table td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: center;
-}
-
+/* TABLE HEADER */
 .item-table th {
-  background-color: #3E065F;
+  background: #0F172A;
   color: white;
+  padding: 14px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
 }
 
-.input-row select,
-.input-row input {
+/* TABLE BODY */
+.item-table td {
+  padding: 14px;
+  border-bottom: 1px solid #e2e8f0;
+  background: white;
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+/* ROW HOVER */
+.item-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+/* INPUTS */
+.item-table input,
+.item-table select {
   width: 100%;
-  padding: 5px;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s ease;
+  background: white;
 }
 
-.input-row button {
-  background-color: #700B97;
+/* INPUT FOCUS */
+.item-table input:focus,
+.item-table select:focus {
+  border-color: #0F172A;
+  box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.15);
+}
+
+/* GENERAL BUTTON */
+button {
+  transition: all 0.2s ease;
+  font-weight: 600;
+}
+
+/* TABLE BUTTONS */
+.item-table button {
+  background: #0F172A;
   color: white;
   border: none;
-  padding: 6px 12px;
+  padding: 10px 16px;
+  border-radius: 10px;
   cursor: pointer;
+  font-size: 14px;
 }
 
-.input-row button:hover {
-  background-color: #8E05C2;
+.item-table button:hover {
+  background: #1E293B;
+  transform: translateY(-1px);
 }
 
-.locked-row {
-  background-color: #f4f4f4;
-}
-
+/* REMOVE BUTTON */
 .remove-btn {
-  background-color: #c0392b;
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  cursor: pointer;
+  background: #DC2626 !important;
 }
 
 .remove-btn:hover {
-  background-color: #e74c3c;
+  background: #B91C1C !important;
 }
 
-.generate-btn {
-  margin-top: 20px;
-  padding: 12px 20px;
-  background-color: #700B97;
+/* SUMMARY CARD */
+.summary-section {
+  background: linear-gradient(
+    135deg,
+    #0F172A,
+    #1E293B
+  );
   color: white;
+  padding: 24px;
+  border-radius: 18px;
+  margin-top: 25px;
+  box-shadow:
+    0 8px 20px rgba(15, 23, 42, 0.2);
+}
+
+.summary-section h3,
+.summary-section h2 {
+  margin: 10px 0;
+  color: white;
+}
+
+.summary-section h3 {
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.summary-section h2 {
+  font-size: 30px;
+  font-weight: 700;
+}
+
+/* GENERATE BUTTON */
+.generate-btn {
+  width: 100%;
+  margin-top: 25px;
+  padding: 16px;
   border: none;
-  border-radius: 8px;
+  border-radius: 14px;
+  background: linear-gradient(
+    135deg,
+    #0F172A,
+    #1E293B
+  );
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
   cursor: pointer;
+  box-shadow:
+    0 8px 18px rgba(15, 23, 42, 0.25);
 }
 
 .generate-btn:hover {
-  background-color: #8E05C2;
+  transform: translateY(-2px);
+  background: linear-gradient(
+    135deg,
+    #1E293B,
+    #334155
+  );
+}
+
+.generate-btn:disabled {
+  background: #94A3B8;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* LOCKED ROW */
+.locked-row {
+  background-color: #f1f5f9;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .joborder-container {
+    padding: 12px;
+  }
+
+  .joborder-card {
+    padding: 18px;
+  }
+
+  .item-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .generate-btn {
+    font-size: 14px;
+    padding: 14px;
+  }
+
+  .summary-section h2 {
+    font-size: 24px;
+  }
 }

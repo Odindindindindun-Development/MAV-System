@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import "../style/BillingDetail.css";
+import html2canvas from "html2canvas";
 
 interface BillingItem {
   JobOrderItemID: number;
@@ -240,52 +241,32 @@ setBilling(prev =>
   };
 
   // DOWNLOAD RECEIPT
-  const handleDownloadReceipt = (payment: Payment) => {
-    if (!billing) return;
+const handleDownloadReceipt = async () => {
+  const receiptElement = document.getElementById("receipt-content");
 
-    const customerName = billing.customer
-      ? `${billing.customer.FirstName} ${billing.customer.LastName}`
-      : "N/A";
+  if (!receiptElement) return;
 
-    const receiptContent = `
-==============================
-        PAYMENT RECEIPT
-==============================
+  const canvas = await html2canvas(receiptElement, {
+    scale: 2,
+  });
 
-Receipt ID: ${payment.PaymentID}
-Invoice ID: ${billing.BillingID}
-Job Order ID: ${billing.job_order?.JobOrderID}
+  const image = canvas.toDataURL("image/png");
 
-Customer: ${customerName}
+  const link = document.createElement("a");
 
-Payment Amount: ₱${Number(payment.Amount).toFixed(2)}
-Payment Method: ${payment.PaymentMethod}
-Payment Date: ${payment.PaymentDate}
+  link.href = image;
+  link.download = `receipt-${selectedReceipt?.PaymentID}.png`;
 
-==============================
-Thank you for your payment!
-==============================
-`;
+  link.click();
+};
 
-    const blob = new Blob([receiptContent], {
-      type: "text/plain",
-    });
-
-    const url = window.URL.createObjectURL(blob);
-
-    const link = document.createElement("a");
-
-    link.href = url;
-    link.download = `receipt-${payment.PaymentID}.txt`;
-
-    document.body.appendChild(link);
-
-    link.click();
-
-    document.body.removeChild(link);
-
-    window.URL.revokeObjectURL(url);
-  };
+  const formatDate = (date: string) => {
+  return new Date(date).toLocaleDateString("en-PH", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+};
 
   return (
     <div className="billing-container">
@@ -580,80 +561,88 @@ Thank you for your payment!
   </h3>
 </div>
 
-      {/* ✅ RECEIPT MODAL */}
-      {selectedReceipt && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h2>Payment Receipt</h2>
+      {/* RECEIPT MODAL */}
+{selectedReceipt && (
+  <div className="modal-overlay">
+    <div className="receipt-modal" id="receipt-content">
+      {/* HEADER */}
+      <div className="receipt-header">
+        <h1>Davao MAV Auto Corporation</h1>
+        <p>Official Payment Receipt</p>
+      </div>
 
-            <p>
-              <strong>Receipt ID:</strong>{" "}
-              {selectedReceipt.PaymentID}
-            </p>
+      {/* RECEIPT BODY */}
+      <div className="receipt-body">
 
-            <p>
-              <strong>Invoice ID:</strong>{" "}
-              {billing.BillingID}
-            </p>
-
-            <p>
-              <strong>Job Order ID:</strong>{" "}
-              {billing.job_order?.JobOrderID}
-            </p>
-
-            <p>
-              <strong>Customer:</strong>{" "}
-              {billing.customer?.FirstName}{" "}
-              {billing.customer?.LastName}
-            </p>
-
-            <p>
-              <strong>Amount:</strong> ₱
-              {Number(
-                selectedReceipt.Amount
-              ).toFixed(2)}
-            </p>
-
-            <p>
-              <strong>Method:</strong>{" "}
-              {selectedReceipt.PaymentMethod}
-            </p>
-
-            <p>
-              <strong>Date:</strong>{" "}
-              {selectedReceipt.PaymentDate}
-            </p>
-
-            <div
-              style={{
-                display: "flex",
-                gap: "10px",
-                marginTop: "20px",
-              }}
-            >
-              <button
-                className="download-btn"
-                onClick={() =>
-                  handleDownloadReceipt(
-                    selectedReceipt
-                  )
-                }
-              >
-                Download Receipt
-              </button>
-
-              <button
-                className="cancel-btn"
-                onClick={() =>
-                  setSelectedReceipt(null)
-                }
-              >
-                Close
-              </button>
-            </div>
-          </div>
+        <div className="receipt-row">
+          <span>Receipt ID</span>
+          <strong>#{selectedReceipt.PaymentID}</strong>
         </div>
-      )}
+
+        <div className="receipt-row">
+          <span>Invoice ID</span>
+          <strong>#{billing.BillingID}</strong>
+        </div>
+
+        <div className="receipt-row">
+          <span>Job Order ID</span>
+          <strong>#{billing.job_order?.JobOrderID}</strong>
+        </div>
+
+        <div className="receipt-row">
+          <span>Customer</span>
+          <strong>
+            {billing.customer?.FirstName}{" "}
+            {billing.customer?.LastName}
+          </strong>
+        </div>
+
+        <div className="receipt-divider"></div>
+
+        <div className="receipt-row">
+          <span>Payment Method</span>
+          <strong>{selectedReceipt.PaymentMethod}</strong>
+        </div>
+
+        <div className="receipt-row">
+          <span>Payment Date</span>
+          <strong>{formatDate(selectedReceipt.PaymentDate)}</strong>
+        </div>
+
+        <div className="receipt-total">
+          <span>Total Paid</span>
+
+          <h2>
+            ₱{Number(selectedReceipt.Amount).toFixed(2)}
+          </h2>
+        </div>
+
+        <div className="receipt-footer">
+          <p>Thank you for your payment!</p>
+        </div>
+      </div>
+
+      {/* BUTTONS */}
+      <div className="receipt-actions">
+        <button
+          className="download-btn"
+          onClick={handleDownloadReceipt}
+        >
+          Download Receipt
+        </button>
+
+        <button
+          className="cancel-btn"
+          onClick={() =>
+            setSelectedReceipt(null)
+          }
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 };

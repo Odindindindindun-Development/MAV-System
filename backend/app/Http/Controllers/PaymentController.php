@@ -9,10 +9,24 @@ use App\Models\Billing;
 class PaymentController extends Controller
 {
     // List all payments
-    public function index()
+    public function index(Request $request)
     {
-        return Payment::with('billing.customer')->get();
-    }
+        $range = $request->query('range', 'all');
+        $startDate = match($range) {
+            '7d'   => \Carbon\Carbon::now()->subDays(7)->startOfDay(),
+            '30d'  => \Carbon\Carbon::now()->subDays(30)->startOfDay(),
+            '365d' => \Carbon\Carbon::now()->subDays(365)->startOfDay(),
+            default => null,
+        };
+
+        $query = Payment::with('billing.customer');
+
+        if ($startDate) {
+            $query->where('PaymentDate', '>=', $startDate);
+        }
+
+        return response()->json($query->orderBy('PaymentDate', 'desc')->get());
+        }
 
     // Show a single payment
     public function show($id)

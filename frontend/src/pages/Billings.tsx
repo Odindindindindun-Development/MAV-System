@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "../style/customerinfo.css";
-import { FaEye } from "react-icons/fa";
+import { FaClipboardList } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 interface Billing {
@@ -22,11 +22,15 @@ const Billings: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
+    // PAGINATION
+    const [currentPage, setCurrentPage] = useState(1);
+    const rowsPerPage = 10;
+
     useEffect(() => {
         axios
             .get("http://127.0.0.1:8000/api/billings")
             .then((res) => {
-                setBillings(res.data.data); // adjust if needed
+                setBillings(res.data.data);
                 setLoading(false);
             })
             .catch((err) => {
@@ -38,10 +42,15 @@ const Billings: React.FC = () => {
 
     const navigate = useNavigate();
 
-    // Edit handler
     const handleManage = (id: number) => {
         navigate(`/billings/${id}`);
     };
+
+    // PAGINATION LOGIC
+    const indexOfLastRow = currentPage * rowsPerPage;
+    const indexOfFirstRow = indexOfLastRow - rowsPerPage;
+    const currentBillings = billings.slice(indexOfFirstRow, indexOfLastRow);
+    const totalPages = Math.ceil(billings.length / rowsPerPage);
 
     return (
         <div>
@@ -51,8 +60,9 @@ const Billings: React.FC = () => {
                     <h1>Billing</h1>
                     <p>View and manage all generated billings.</p>
                 </div>
+
                 <div className="customerinfo-right">
-                    {/* ❌ No Add Button */}
+                    {/* No Add Button */}
                 </div>
             </div>
 
@@ -75,36 +85,93 @@ const Billings: React.FC = () => {
                                 <th className="action">Actions</th>
                             </tr>
                         </thead>
+
                         <tbody>
-                            {billings.map((b) => (
+                            {currentBillings.map((b) => (
                                 <tr key={b.BillingID}>
                                     <td>{b.BillingID}</td>
+
                                     <td>#{b.JobOrderID}</td>
+
                                     <td>
                                         {b.customer
                                             ? `${b.customer.FirstName} ${b.customer.LastName}`
                                             : "—"}
                                     </td>
-                                    <td>₱{b.TotalAmount}</td>
+
+                                    <td>₱{Number(b.TotalAmount).toFixed(2)}</td>
+
                                     <td>
-                                        <span className={`status ${b.Status.toLowerCase()}`}>
+                                        <span
+                                            className={`status ${b.Status.toLowerCase()}`}
+                                        >
                                             {b.Status}
                                         </span>
                                     </td>
-                                    <td>{b.created_at?.split("T")[0]}</td>
+
+                                    <td>
+                                        {new Date(b.created_at).toLocaleDateString(
+                                            "en-PH",
+                                            {
+                                                year: "numeric",
+                                                month: "short",
+                                                day: "numeric",
+                                            }
+                                        )}
+                                    </td>
+
                                     <td className="action-buttons">
                                         <button
-                                            className="view-btn"
-                                            onClick={() => handleManage(b.BillingID)}
+                                            className="manage-btn"
+                                            onClick={() =>
+                                                handleManage(b.BillingID)
+                                            }
                                             title="View Billing"
                                         >
-                                            <FaEye />
+                                            <FaClipboardList />
                                         </button>
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
+
+                    {/* PAGINATION */}
+                    <div className="pagination">
+                        <button
+                            onClick={() =>
+                                setCurrentPage((prev) =>
+                                    Math.max(prev - 1, 1)
+                                )
+                            }
+                        >
+                            Prev
+                        </button>
+
+                        {[...Array(totalPages)].map((_, i) => (
+                            <button
+                                key={i}
+                                className={
+                                    currentPage === i + 1
+                                        ? "active-page"
+                                        : ""
+                                }
+                                onClick={() => setCurrentPage(i + 1)}
+                            >
+                                {i + 1}
+                            </button>
+                        ))}
+
+                        <button
+                            onClick={() =>
+                                setCurrentPage((prev) =>
+                                    Math.min(prev + 1, totalPages)
+                                )
+                            }
+                        >
+                            Next
+                        </button>
+                    </div>
                 </div>
             )}
         </div>
