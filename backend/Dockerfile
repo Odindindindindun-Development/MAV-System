@@ -25,7 +25,12 @@ WORKDIR /app
 
 COPY . .
 
+# 1. Install dependencies FIRST
 RUN composer install --no-dev --optimize-autoloader
+
+# 2. THEN run Laravel setup
+RUN php artisan config:cache
+RUN php artisan migrate --force
 
 RUN chmod -R 775 storage bootstrap/cache
 
