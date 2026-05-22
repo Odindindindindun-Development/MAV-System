@@ -71,8 +71,8 @@ const applyAdjustment = () => {
 
         const endpoint =
             activeTab === "active"
-                ? "http://127.0.0.1:8000/api/stock-items"
-                : "http://127.0.0.1:8000/api/stock-items-archived";
+                ? "https://mav-backend-system.onrender.com/api/stock-items"
+                : "https://mav-backend-system.onrender.com/api/stock-items-archived";
 
         axios
             .get(endpoint)
@@ -129,7 +129,7 @@ const handleArchive = (id: number) => {
     if (!confirmDelete) return;
 
     axios
-        .delete(`http://127.0.0.1:8000/api/stock-items/${id}`)
+        .delete(`https://mav-backend-system.onrender.com/api/stock-items/${id}`)
         .then(() => {
             setItems((prev) =>
                 prev.map((i) =>
@@ -153,7 +153,7 @@ const handleRestore = (id: number) => {
     if (!confirmRestore) return;
 
     axios
-        .patch(`http://127.0.0.1:8000/api/stock-items/${id}`, {
+        .patch(`https://mav-backend-system.onrender.com/api/stock-items/${id}`, {
             IsArchived: false
         })
         .then(() => {
@@ -206,7 +206,7 @@ const handleSubmit = (e: any) => {
 
     if (isEditing && currentItemID) {
         axios
-            .put(`http://127.0.0.1:8000/api/stock-items/${currentItemID}`, payload)
+            .put(`https://mav-backend-system.onrender.com/api/stock-items/${currentItemID}`, payload)
             .then((res) => {
                 setItems((prev) =>
                     prev.map((i) => (i.StockItemID === currentItemID ? res.data : i))
@@ -215,7 +215,7 @@ const handleSubmit = (e: any) => {
             });
     } else {
         axios
-            .post("http://127.0.0.1:8000/api/stock-items", payload)
+            .post("https://mav-backend-system.onrender.com/api/stock-items", payload)
             .then((res) => {
                 setItems((prev) => [...prev, res.data]);
                 resetForm();

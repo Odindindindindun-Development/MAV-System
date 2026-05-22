@@ -28,7 +28,7 @@ const Billings: React.FC = () => {
 
     useEffect(() => {
         axios
-            .get("http://127.0.0.1:8000/api/billings")
+            .get("https://mav-backend-system.onrender.com/api/billings")
             .then((res) => {
                 setBillings(res.data.data);
                 setLoading(false);

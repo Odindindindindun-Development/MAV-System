@@ -48,8 +48,8 @@ const Vehicles: React.FC = () => {
 
     const endpoint =
       activeTab === "active"
-        ? "http://127.0.0.1:8000/api/vehicles"
-        : "http://127.0.0.1:8000/api/vehicles-archived";
+        ? "https://mav-backend-system.onrender.com/api/vehicles"
+        : "https://mav-backend-system.onrender.com/api/vehicles-archived";
 
     axios.get(endpoint)
       .then(res => {
@@ -58,7 +58,7 @@ const Vehicles: React.FC = () => {
       })
       .catch(() => setLoading(false));
 
-    axios.get("http://127.0.0.1:8000/api/customers")
+    axios.get("https://mav-backend-system.onrender.com/api/customers")
       .then(res => setCustomers(res.data));
   }, [activeTab]);
 
@@ -118,7 +118,7 @@ const Vehicles: React.FC = () => {
     const confirmDelete = window.confirm("Are you sure you want to archive this vehicle?");
     if (!confirmDelete) return;
 
-    axios.delete(`http://127.0.0.1:8000/api/vehicles/${id}`)
+    axios.delete(`https://mav-backend-system.onrender.com/api/vehicles/${id}`)
         .then(() => {
             setVehicles(prev => prev.filter(v => v.VehicleID !== id));
             alert("Vehicle archived successfully.");
@@ -134,7 +134,7 @@ const handleRestore = (id: number) => {
 
     if (!confirmRestore) return;
 
-    axios.patch(`http://127.0.0.1:8000/api/vehicles/${id}/restore`)
+    axios.patch(`https://mav-backend-system.onrender.com/api/vehicles/${id}/restore`)
         .then(() => {
             setVehicles(prev => prev.filter(v => v.VehicleID !== id));
             alert("Vehicle restored successfully.");
@@ -200,7 +200,7 @@ const handleRestore = (id: number) => {
     }
 
     if (isEditing && currentVehicleID) {
-      axios.put(`http://127.0.0.1:8000/api/vehicles/${currentVehicleID}`, formData)
+      axios.put(`https://mav-backend-system.onrender.com/api/vehicles/${currentVehicleID}`, formData)
         .then(res => {
           setVehicles(prev =>
             prev.map(v =>
@@ -211,7 +211,7 @@ const handleRestore = (id: number) => {
           resetForm();
         });
     } else {
-      axios.post("http://127.0.0.1:8000/api/vehicles", formData)
+      axios.post("https://mav-backend-system.onrender.com/api/vehicles", formData)
         .then(res => {
           setVehicles(prev => [...prev, res.data]);
           setShowModal(false);

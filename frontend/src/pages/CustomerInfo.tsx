@@ -41,8 +41,8 @@ const CustomerInfo: React.FC = () => {
 
         const endpoint =
             activeTab === "active"
-                ? "http://127.0.0.1:8000/api/customers"
-                : "http://127.0.0.1:8000/api/customers-archived";
+                ? "https://mav-backend-system.onrender.com/api/customers"
+                : "https://mav-backend-system.onrender.com/api/customers-archived";
 
         axios.get(endpoint)
             .then(res => {
@@ -75,7 +75,7 @@ const CustomerInfo: React.FC = () => {
   const confirmDelete = window.confirm("Are you sure you want to archive this customer?");
   if (!confirmDelete) return;
 
-  axios.delete(`http://127.0.0.1:8000/api/customers/${id}`)
+  axios.delete(`https://mav-backend-system.onrender.com/api/customers/${id}`)
     .then(() => {
       setCustomers(prev => prev.filter(c => c.CustomerID !== id));
       alert("Customer archived successfully.");
@@ -93,7 +93,7 @@ const CustomerInfo: React.FC = () => {
 
     if (!confirmRestore) return;
 
-    axios.patch(`http://127.0.0.1:8000/api/customers/${id}/restore`)
+    axios.patch(`https://mav-backend-system.onrender.com/api/customers/${id}/restore`)
         .then(() => {
             setCustomers(prev =>
                 prev.filter(c => c.CustomerID !== id)
@@ -163,7 +163,7 @@ const contactExists = customers.some(c =>
 
     // API REQUEST
     if (isEditing && currentCustomerID) {
-        axios.put(`http://127.0.0.1:8000/api/customers/${currentCustomerID}`, formData)
+        axios.put(`https://mav-backend-system.onrender.com/api/customers/${currentCustomerID}`, formData)
             .then(res => {
                 setCustomers(prev =>
                     prev.map(c =>
@@ -173,7 +173,7 @@ const contactExists = customers.some(c =>
                 setShowModal(false);
             });
     } else {
-        axios.post("http://127.0.0.1:8000/api/customers", formData)
+        axios.post("https://mav-backend-system.onrender.com/api/customers", formData)
             .then(res => {
                 setCustomers(prev => [...prev, res.data]);
                 setShowModal(false);

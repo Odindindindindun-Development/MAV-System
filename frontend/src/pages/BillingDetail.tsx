@@ -73,7 +73,7 @@ const BillingDetail: React.FC = () => {
 
     try {
       const res = await axios.get(
-        `http://localhost:8000/api/billings/${id}`
+        `https://mav-backend-system.onrender.com/api/billings/${id}`
       );
 
       const data = res.data;
@@ -134,7 +134,7 @@ const BillingDetail: React.FC = () => {
 
     try {
       const res = await axios.post(
-        `http://localhost:8000/api/billings/${billing.BillingID}/adjustments`,
+        `https://mav-backend-system.onrender.com/api/billings/${billing.BillingID}/adjustments`,
         {
           Description: desc,
           Amount: amount,
@@ -162,7 +162,7 @@ const BillingDetail: React.FC = () => {
 
     try {
       const res = await axios.delete(
-        `http://localhost:8000/api/billings/${billing.BillingID}/adjustments/${adjId}`
+        `https://mav-backend-system.onrender.com/api/billings/${billing.BillingID}/adjustments/${adjId}`
       );
 
       setAdjustments(prev =>
@@ -203,7 +203,7 @@ const BillingDetail: React.FC = () => {
 
     try {
       const res = await axios.post(
-        "http://localhost:8000/api/payments",
+        "https://mav-backend-system.onrender.com/api/payments",
         {
           BillingID: billing.BillingID,
           Amount: paymentAmount,

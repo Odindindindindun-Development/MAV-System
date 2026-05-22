@@ -85,17 +85,17 @@ const FinancialRecords: React.FC = () => {
   const fetchAll = (range: DateRange = dateRange) => {
     const q = range !== "all" ? `?range=${range}` : "";
 
-    axios.get(`http://localhost:8000/api/financial-records${q}`)
+    axios.get(`https://mav-backend-system.onrender.com/api/financial-records${q}`)
       .then(res => setData(res.data)).catch(console.error);
 
-    axios.get(`http://localhost:8000/api/payments${q}`)
+    axios.get(`https://mav-backend-system.onrender.com/api/payments${q}`)
       .then(res => setPayments(res.data)).catch(console.error);
 
-    axios.get(`http://localhost:8000/api/expenses${q}`)
+    axios.get(`https://mav-backend-system.onrender.com/api/expenses${q}`)
       .then(res => setExpenses(res.data)).catch(console.error);
 
     // Always pass range for chart (default to 30d)
-    axios.get(`http://localhost:8000/api/financial-records/chart?range=${range === "all" ? "all" : range}`)
+    axios.get(`https://mav-backend-system.onrender.com/api/financial-records/chart?range=${range === "all" ? "all" : range}`)
       .then(res => setChartData(res.data)).catch(console.error);
   };
 
@@ -145,7 +145,7 @@ const FinancialRecords: React.FC = () => {
     }
 
     try {
-      await axios.post("http://localhost:8000/api/expenses", expenseForm);
+      await axios.post("https://mav-backend-system.onrender.com/api/expenses", expenseForm);
       setSuccess("Expense recorded successfully.");
       setExpenseForm({ Category: "", Amount: "", ExpenseDate: "", Description: "" });
       fetchAll();
@@ -159,7 +159,7 @@ const FinancialRecords: React.FC = () => {
   const handleDeleteExpense = async (id: number) => {
     if (!window.confirm("Delete this expense?")) return;
     try {
-      await axios.delete(`http://localhost:8000/api/expenses/${id}`);
+      await axios.delete(`https://mav-backend-system.onrender.com/api/expenses/${id}`);
       fetchAll();
     } catch (err) { console.error(err); }
   };

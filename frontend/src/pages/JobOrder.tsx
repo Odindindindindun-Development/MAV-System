@@ -44,7 +44,7 @@ const JobOrder: React.FC = () => {
 
     // FETCH JOB ORDERS
     useEffect(() => {
-        axios.get("http://127.0.0.1:8000/api/job-orders")
+        axios.get("https://mav-backend-system.onrender.com/api/job-orders")
             .then(res => {
                 setJobOrders(res.data);
                 setLoading(false);
@@ -58,7 +58,7 @@ const JobOrder: React.FC = () => {
 
     // FETCH VEHICLES
     useEffect(() => {
-        axios.get("http://127.0.0.1:8000/api/vehicles")
+        axios.get("https://mav-backend-system.onrender.com/api/vehicles")
             .then(res => setVehicles(res.data))
             .catch(err => console.error(err));
     }, []);
@@ -111,7 +111,7 @@ const handleSubmit = (e: any) => {
         return;
     }
 
-    axios.post("http://127.0.0.1:8000/api/job-orders", {
+    axios.post("https://mav-backend-system.onrender.com/api/job-orders", {
         DateCreated: formData.DateCreated,
         Status: formData.Status,
         VehicleID: Number(formData.VehicleID),

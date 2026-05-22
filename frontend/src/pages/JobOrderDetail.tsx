@@ -63,8 +63,8 @@ const JobOrderDetails: React.FC = () => {
     if (!id) return;
 
     Promise.all([
-      axios.get(`http://localhost:8000/api/job-orders/${id}`),
-      axios.get(`http://localhost:8000/api/stock-items`)
+      axios.get(`https://mav-backend-system.onrender.com/api/job-orders/${id}`),
+      axios.get(`https://mav-backend-system.onrender.com/api/stock-items`)
     ])
       .then(([jobRes, stockRes]) => {
         setJobOrder(jobRes.data);
@@ -109,7 +109,7 @@ const JobOrderDetails: React.FC = () => {
 
     try {
       const res = await axios.post(
-        `http://localhost:8000/api/job-orders/${jobOrder.JobOrderID}/items`,
+        `https://mav-backend-system.onrender.com/api/job-orders/${jobOrder.JobOrderID}/items`,
         { StockItemID: selectedStockID, Quantity: stockQuantity }
       );
 
@@ -133,7 +133,7 @@ const JobOrderDetails: React.FC = () => {
 
     try {
       const res = await axios.post(
-        `http://localhost:8000/api/job-orders/${jobOrder.JobOrderID}/labors`,
+        `https://mav-backend-system.onrender.com/api/job-orders/${jobOrder.JobOrderID}/labors`,
         { Description: laborDescription, Cost: laborCost }
       );
 
@@ -222,7 +222,7 @@ const JobOrderDetails: React.FC = () => {
                       onClick={async () => {
                         try {
                           await axios.delete(
-                            `http://localhost:8000/api/job-orders/items/${item.JobOrderItemID}`
+                            `https://mav-backend-system.onrender.com/api/job-orders/items/${item.JobOrderItemID}`
                           );
 
                           setJobOrder(prev =>
@@ -321,7 +321,7 @@ const JobOrderDetails: React.FC = () => {
                       onClick={async () => {
                         try {
                           await axios.delete(
-                            `http://localhost:8000/api/job-orders/labors/${labor.JobOrderLaborID}`
+                            `https://mav-backend-system.onrender.com/api/job-orders/labors/${labor.JobOrderLaborID}`
                           );
                           setJobOrder(prev =>
                             prev
@@ -401,13 +401,13 @@ const JobOrderDetails: React.FC = () => {
 
           try {
             await axios.post(
-              `http://localhost:8000/api/job-orders/${jobOrder.JobOrderID}/generate-billing`
+              `https://mav-backend-system.onrender.com/api/job-orders/${jobOrder.JobOrderID}/generate-billing`
             );
 
             alert("Billing generated successfully!");
 
             const res = await axios.get<JobOrder>(
-              `http://localhost:8000/api/job-orders/${id}`
+              `https://mav-backend-system.onrender.com/api/job-orders/${id}`
             );
 
             setJobOrder(res.data);
