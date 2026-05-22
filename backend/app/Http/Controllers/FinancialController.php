@@ -47,7 +47,7 @@ class FinancialController extends Controller
         ]);
     }
 
-   public function chartData(Request $request)
+  public function chartData(Request $request)
 {
     try {
         $range = $request->query('range', '30d');
@@ -60,14 +60,14 @@ class FinancialController extends Controller
         };
 
         $revenue = DB::table('payments')
-            ->selectRaw("TO_CHAR(\"PaymentDate\"::date, '{$groupFormat}') as period, SUM(\"Amount\") as total")
+            ->selectRaw("TO_CHAR(\"PaymentDate\"::timestamp, '{$groupFormat}') as period, SUM(\"Amount\") as total")
             ->where('PaymentDate', '>=', $startDate)
             ->groupBy('period')
             ->orderBy('period')
             ->pluck('total', 'period');
 
         $expenses = DB::table('expenses')
-            ->selectRaw("TO_CHAR(\"ExpenseDate\"::date, '{$groupFormat}') as period, SUM(\"Amount\") as total")
+            ->selectRaw("TO_CHAR(\"ExpenseDate\"::timestamp, '{$groupFormat}') as period, SUM(\"Amount\") as total")
             ->where('ExpenseDate', '>=', $startDate)
             ->groupBy('period')
             ->orderBy('period')
@@ -89,11 +89,7 @@ class FinancialController extends Controller
         return response()->json($data);
 
     } catch (\Exception $e) {
-        return response()->json([
-            'error'   => $e->getMessage(),
-            'line'    => $e->getLine(),
-            'file'    => $e->getFile(),
-        ], 500);
+        return response()->json(['error' => $e->getMessage()], 500);
     }
 }
 }
