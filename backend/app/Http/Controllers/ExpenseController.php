@@ -32,7 +32,8 @@ class ExpenseController extends Controller
     }
 
     public function store(Request $request)
-    {
+{
+    try {
         $request->validate([
             'Category'    => 'required|string|max:100',
             'Amount'      => 'required|numeric|min:0.01',
@@ -45,7 +46,11 @@ class ExpenseController extends Controller
         ]));
 
         return response()->json($expense, 201);
+
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
     }
+}
 
     public function update(Request $request, $id)
     {
