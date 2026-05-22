@@ -58,13 +58,15 @@ class FinancialController extends Controller
         default => [Carbon::now()->subDays(30)->startOfDay(), 'YYYY-MM-DD'],
     };
 
-    $revenue = Payment::selectRaw("TO_CHAR(\"PaymentDate\", ?) as period, SUM(\"Amount\") as total", [$groupFormat])
+    $revenue = DB::table('payments')
+        ->selectRaw("TO_CHAR(\"PaymentDate\"::date, '{$groupFormat}') as period, SUM(\"Amount\") as total")
         ->where('PaymentDate', '>=', $startDate)
         ->groupBy('period')
         ->orderBy('period')
         ->pluck('total', 'period');
 
-    $expenses = Expense::selectRaw("TO_CHAR(\"ExpenseDate\", ?) as period, SUM(\"Amount\") as total", [$groupFormat])
+    $expenses = DB::table('expenses')
+        ->selectRaw("TO_CHAR(\"ExpenseDate\"::date, '{$groupFormat}') as period, SUM(\"Amount\") as total")
         ->where('ExpenseDate', '>=', $startDate)
         ->groupBy('period')
         ->orderBy('period')
