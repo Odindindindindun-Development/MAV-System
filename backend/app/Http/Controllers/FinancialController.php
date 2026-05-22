@@ -51,28 +51,25 @@ class FinancialController extends Controller
 {
     $range = $request->query('range', '30d');
 
-    [$startDate, $groupFormat, $labelFormat] = match($range) {
-        '7d'   => [Carbon::now()->subDays(7)->startOfDay(),  '%Y-%m-%d', 'day'],
-        '365d' => [Carbon::now()->subDays(365)->startOfDay(),'%Y-%m',    'month'],
-        'all'  => [Carbon::now()->subYear(5)->startOfDay(),  '%Y-%m',    'month'],
-        default => [Carbon::now()->subDays(30)->startOfDay(),'%Y-%m-%d', 'day'],  // 30d
+    [$startDate, $groupFormat] = match($range) {
+        '7d'   => [Carbon::now()->subDays(7)->startOfDay(),   'YYYY-MM-DD'],
+        '365d' => [Carbon::now()->subDays(365)->startOfDay(), 'YYYY-MM'],
+        'all'  => [Carbon::now()->subYears(5)->startOfDay(),  'YYYY-MM'],
+        default => [Carbon::now()->subDays(30)->startOfDay(), 'YYYY-MM-DD'],
     };
 
-    // Revenue grouped
-    $revenue = Payment::selectRaw("DATE_FORMAT(PaymentDate, ?) as period, SUM(Amount) as total", [$groupFormat])
+    $revenue = Payment::selectRaw("TO_CHAR(\"PaymentDate\", ?) as period, SUM(\"Amount\") as total", [$groupFormat])
         ->where('PaymentDate', '>=', $startDate)
         ->groupBy('period')
         ->orderBy('period')
         ->pluck('total', 'period');
 
-    // Expenses grouped
-    $expenses = Expense::selectRaw("DATE_FORMAT(ExpenseDate, ?) as period, SUM(Amount) as total", [$groupFormat])
+    $expenses = Expense::selectRaw("TO_CHAR(\"ExpenseDate\", ?) as period, SUM(\"Amount\") as total", [$groupFormat])
         ->where('ExpenseDate', '>=', $startDate)
         ->groupBy('period')
         ->orderBy('period')
         ->pluck('total', 'period');
 
-    // Merge all periods
     $periods = collect($revenue->keys())->merge($expenses->keys())->unique()->sort()->values();
 
     $data = $periods->map(function ($period) use ($revenue, $expenses) {
