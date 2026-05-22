@@ -71,21 +71,20 @@ const CustomerInfo: React.FC = () => {
     };
 
     // ARCHIVE
-    const handleArchive = (id: number) => {
-    const confirmDelete = window.confirm("Are you sure you want to archive this customer?");
+   const handleArchive = (id: number) => {
+  const confirmDelete = window.confirm("Are you sure you want to archive this customer?");
+  if (!confirmDelete) return;
 
-    if (!confirmDelete) return;
-
-    axios.delete(`http://127.0.0.1:8000/api/customers/${id}`)
-        .then(() => {
-            setCustomers(prev =>
-                prev.filter(c => c.CustomerID !== id)
-            );
-            alert("Customer archived successfully.");
-        })
-        .catch(() => {
-            alert("Failed to archive customer.");
-        });
+  axios.delete(`http://127.0.0.1:8000/api/customers/${id}`)
+    .then(() => {
+      setCustomers(prev => prev.filter(c => c.CustomerID !== id));
+      alert("Customer archived successfully.");
+    })
+    .catch(err => {
+      const message = err.response?.data?.message
+        || "Failed to archive customer.";
+      alert(message);
+    });
 };
 
     // RESTORE

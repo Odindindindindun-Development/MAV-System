@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\JobOrder;
+use App\Models\Vehicle;
 
 class Customer extends Model
 {
@@ -19,4 +21,14 @@ class Customer extends Model
         'Address',
         'IsArchived',
     ];
+
+    public function jobOrders()
+{
+    return $this->hasMany(JobOrder::class, 'CustomerID');
+}
+
+public function vehicles()
+{
+    return $this->hasMany(Vehicle::class, 'CustomerID');
+}
 }

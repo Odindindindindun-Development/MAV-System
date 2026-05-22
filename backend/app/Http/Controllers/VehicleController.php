@@ -75,12 +75,19 @@ class VehicleController extends Controller
      * Remove the specified resource from storage.
      */
     public function destroy(string $id)
-    {
-        $vehicle = Vehicle::findOrFail($id);
-        $vehicle->update(['IsArchived' => 1]);
+{
+    $vehicle = Vehicle::findOrFail($id);
 
-        return response()->json(['message' => 'Archived']);
+    if ($vehicle->jobOrders()->exists()) {
+        return response()->json([
+            'message' => 'Cannot archive this vehicle. It has existing job order records.'
+        ], 422);
     }
+
+    $vehicle->update(['IsArchived' => 1]);
+
+    return response()->json(['message' => 'Vehicle archived successfully.']);
+}
 
     public function restore($id)
     {

@@ -116,7 +116,6 @@ const Vehicles: React.FC = () => {
 
  const handleArchive = (id: number) => {
     const confirmDelete = window.confirm("Are you sure you want to archive this vehicle?");
-
     if (!confirmDelete) return;
 
     axios.delete(`http://127.0.0.1:8000/api/vehicles/${id}`)
@@ -124,8 +123,9 @@ const Vehicles: React.FC = () => {
             setVehicles(prev => prev.filter(v => v.VehicleID !== id));
             alert("Vehicle archived successfully.");
         })
-        .catch(() => {
-            alert("Failed to archive vehicle.");
+        .catch(err => {
+            const message = err.response?.data?.message || "Failed to archive vehicle.";
+            alert(message);
         });
 };
 

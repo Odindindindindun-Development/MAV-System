@@ -83,13 +83,21 @@ class CustomerController extends Controller
      * Remove the specified resource from storage.
      */
     public function destroy(string $id)
-    {
-        $customer = Customer::findOrFail($id);
+{
+    $customer = Customer::with('vehicles.jobOrders')->findOrFail($id);
 
-        $customer->update([
-            'IsArchived' => 1
-        ]);
+    $hasJobOrders = $customer->vehicles->some(
+        fn($vehicle) => $vehicle->jobOrders()->exists()
+    );
 
-        return response()->json(['message' => 'Archived']);
+    if ($hasJobOrders) {
+        return response()->json([
+            'message' => 'Cannot archive this customer. They have existing job order records.'
+        ], 422);
     }
+
+    $customer->update(['IsArchived' => 1]);
+
+    return response()->json(['message' => 'Customer archived successfully.']);
+}
 }

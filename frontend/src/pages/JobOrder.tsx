@@ -192,7 +192,7 @@ const handleSubmit = (e: any) => {
                             </div>
 
                             <div className="form-group">
-                                <label>Customer ID</label>
+                                <label>Vehicle ID</label>
                                 <input
                                     type="text"
                                     placeholder="Type Vehicle ID or Customer..."

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\JobOrder;
 
 class Vehicle extends Model
 {
@@ -23,4 +24,9 @@ class Vehicle extends Model
     {
         return $this->belongsTo(Customer::class, 'CustomerID', 'CustomerID');
     }
+
+    public function jobOrders()
+{
+    return $this->hasMany(JobOrder::class, 'VehicleID'); // adjust column name if needed
+}
 }
