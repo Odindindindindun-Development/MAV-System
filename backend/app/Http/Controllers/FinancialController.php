@@ -47,44 +47,53 @@ class FinancialController extends Controller
         ]);
     }
 
-    public function chartData(Request $request)
+   public function chartData(Request $request)
 {
-    $range = $request->query('range', '30d');
+    try {
+        $range = $request->query('range', '30d');
 
-    [$startDate, $groupFormat] = match($range) {
-        '7d'   => [Carbon::now()->subDays(7)->startOfDay(),   'YYYY-MM-DD'],
-        '365d' => [Carbon::now()->subDays(365)->startOfDay(), 'YYYY-MM'],
-        'all'  => [Carbon::now()->subYears(5)->startOfDay(),  'YYYY-MM'],
-        default => [Carbon::now()->subDays(30)->startOfDay(), 'YYYY-MM-DD'],
-    };
+        [$startDate, $groupFormat] = match($range) {
+            '7d'   => [Carbon::now()->subDays(7)->startOfDay(),   'YYYY-MM-DD'],
+            '365d' => [Carbon::now()->subDays(365)->startOfDay(), 'YYYY-MM'],
+            'all'  => [Carbon::now()->subYears(5)->startOfDay(),  'YYYY-MM'],
+            default => [Carbon::now()->subDays(30)->startOfDay(), 'YYYY-MM-DD'],
+        };
 
-    $revenue = DB::table('payments')
-        ->selectRaw("TO_CHAR(\"PaymentDate\"::date, '{$groupFormat}') as period, SUM(\"Amount\") as total")
-        ->where('PaymentDate', '>=', $startDate)
-        ->groupBy('period')
-        ->orderBy('period')
-        ->pluck('total', 'period');
+        $revenue = DB::table('payments')
+            ->selectRaw("TO_CHAR(\"PaymentDate\"::date, '{$groupFormat}') as period, SUM(\"Amount\") as total")
+            ->where('PaymentDate', '>=', $startDate)
+            ->groupBy('period')
+            ->orderBy('period')
+            ->pluck('total', 'period');
 
-    $expenses = DB::table('expenses')
-        ->selectRaw("TO_CHAR(\"ExpenseDate\"::date, '{$groupFormat}') as period, SUM(\"Amount\") as total")
-        ->where('ExpenseDate', '>=', $startDate)
-        ->groupBy('period')
-        ->orderBy('period')
-        ->pluck('total', 'period');
+        $expenses = DB::table('expenses')
+            ->selectRaw("TO_CHAR(\"ExpenseDate\"::date, '{$groupFormat}') as period, SUM(\"Amount\") as total")
+            ->where('ExpenseDate', '>=', $startDate)
+            ->groupBy('period')
+            ->orderBy('period')
+            ->pluck('total', 'period');
 
-    $periods = collect($revenue->keys())->merge($expenses->keys())->unique()->sort()->values();
+        $periods = collect($revenue->keys())->merge($expenses->keys())->unique()->sort()->values();
 
-    $data = $periods->map(function ($period) use ($revenue, $expenses) {
-        $rev = (float) ($revenue[$period] ?? 0);
-        $exp = (float) ($expenses[$period] ?? 0);
-        return [
-            'period'    => $period,
-            'revenue'   => $rev,
-            'expenses'  => $exp,
-            'netProfit' => $rev - $exp,
-        ];
-    });
+        $data = $periods->map(function ($period) use ($revenue, $expenses) {
+            $rev = (float) ($revenue[$period] ?? 0);
+            $exp = (float) ($expenses[$period] ?? 0);
+            return [
+                'period'    => $period,
+                'revenue'   => $rev,
+                'expenses'  => $exp,
+                'netProfit' => $rev - $exp,
+            ];
+        });
 
-    return response()->json($data);
+        return response()->json($data);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'error'   => $e->getMessage(),
+            'line'    => $e->getLine(),
+            'file'    => $e->getFile(),
+        ], 500);
+    }
 }
 }
