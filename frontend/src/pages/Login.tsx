@@ -24,6 +24,8 @@ const Login = () => {
       <div className="login-card">
         <h1 className="login-title">Auto Shop</h1>
         <p className="login-subtitle">Sign in to continue</p>
+        <p className="login-subtitle">Username: admin</p>
+        <p className="login-subtitle">Password: admin123</p>
 
         {error && <p className="login-error">{error}</p>}
 
